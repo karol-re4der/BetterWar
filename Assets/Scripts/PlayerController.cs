@@ -27,7 +27,7 @@ public class PlayerController : MonoBehaviour
     public GameObject SpawnUnit(Vector3 position)
     {
         GameObject newUnit = Instantiate(UnitGroupPrefab, position, Quaternion.identity, Globals.GetUnitSpace);
-        newUnit.GetComponent<UnitGroupController>().CurrentSize = 100;//Random.Range(1, newUnit.GetComponent<UnitGroupController>().InitialSize);
+        newUnit.GetComponent<UnitGroupController>().CurrentSize = 10;//Random.Range(1, newUnit.GetComponent<UnitGroupController>().InitialSize);
         newUnit.GetComponent<UnitGroupController>().Initialize(this);
         UnitGroups.Add(newUnit.GetComponent<UnitGroupController>());
         if (!IsAI)

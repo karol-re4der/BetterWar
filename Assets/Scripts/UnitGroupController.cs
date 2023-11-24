@@ -60,10 +60,10 @@ public class UnitGroupController : MonoBehaviour
             }
         }
 
-        Formation = UnitFormation.GetFormationsToUse(1).First();
-        Formation.Initialize(CurrentSize, 0.5f, transform.position + Vector3.left*10f);
-        Formation.Recompute(transform.position + Vector3.right*10f);
-        SetFormation(Formation);
+        //Formation = Globals.GetFormationGroupController().GetFormationsToUse(1).First();
+        //Formation.Initialize(CurrentSize, 0.5f, transform.position + Vector3.left*10f);
+        //Formation.Recompute(transform.position + Vector3.right*10f);
+        //SetFormation(Formation);
 
     }
 
@@ -160,13 +160,13 @@ public class UnitGroupController : MonoBehaviour
         int unitIndex = 0;
         foreach (Vector3 pos in formation.Positions)
         {
-            UnitController closestUnit = Units.Where(x => x.MovementMode==EUnitMovementMode.Standstill).OrderBy(x => Vector3.Distance(x.transform.position, pos)).First();
+            UnitController closestUnit = Units.Where(x => x.MovementMode == EUnitMovementMode.Standstill).OrderBy(x => Vector3.Distance(x.transform.position, pos)).First();
 
             closestUnit.TargetPosition = pos;
             closestUnit.TargetFacing = formation.FacingDirection;
-            
+
             closestUnit.NewMovementStarted();
-            if(formation.IsShootingPosition(unitIndex))
+            if (formation.IsShootingPosition(unitIndex))
             {
                 closestUnit.InShootingPosition = true;
             }

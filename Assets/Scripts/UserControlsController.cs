@@ -16,6 +16,8 @@ public class UserControlsController : MonoBehaviour
     public BetterToggle debugToggle2;
     public BetterToggle debugToggle3;
 
+    private Vector3 selectionStartPoint = Vector3.zero;
+
     public List<UnitFormation> formationsInUse = new List<UnitFormation>();
     public List<UnitGroupController> UnitsSelected = new List<UnitGroupController>();
 
@@ -57,75 +59,23 @@ public class UserControlsController : MonoBehaviour
                 {
                     if (UnitsSelected.Count() > 0)
                     {
-                        formationsInUse.Clear();
-                        formationsInUse = UnitFormation.GetFormationsToUse(UnitsSelected.Count());
-                        Debug.Log(formationsInUse.Count());
-                        int i = 0;
-                        foreach(UnitFormation form in formationsInUse)
-                        {
-                            form.Initialize(UnitsSelected.ElementAt(i).CurrentSize, 0.5f, clickPos);
-                            i++;
-                        }
+                        selectionStartPoint = clickPos;
                     }
                 }
                 else if (Input.GetMouseButton(1))
                 {
                     if (UnitsSelected.Count() > 0)
                     {
-                        Vector3 cachedLeftAnchor = formationsInUse.First().LeftAnchor;
-                        float formationMargin = 2f;
-                        float totalWeight = formationsInUse.Sum(x => x.MaxFrontage)+(formationsInUse.Count()-1)*formationMargin;
-                        float totalWidth = Mathf.Min(Vector3.Distance(formationsInUse.First().LeftAnchor, clickPos), totalWeight);
-                        float frontageRequired = formationsInUse.Sum(x => x.MinFrontage) + (formationsInUse.Count() - 1) * formationMargin;
-                        float frontageInUse = 0f;
-
-                        foreach (UnitFormation form in formationsInUse)
-                        {
-                            if (totalWidth > frontageRequired)
-                            {
-                                float formationPart = form.MaxFrontage / totalWeight;
-                                float rightAnchorShift = (formationPart * totalWidth + frontageInUse);
-
-                                Vector3 rightAnchor = Vector3.Lerp(formationsInUse.First().LeftAnchor, clickPos, rightAnchorShift / totalWidth);
-
-                                form.Recompute(rightAnchor, frontageInUse);
-
-                                form.Visualise();
-
-                                frontageInUse = rightAnchorShift + formationMargin;
-                            }
-                            else
-                            {
-                                form.Hide();
-                            }
-                        }
-                        Debug.Log("");
+                        Globals.GetFormationGroupController.Reform(selectionStartPoint, clickPos, UnitsSelected);
+                        Globals.GetFormationGroupController.Visualise();
                     }
                 }
                 else if (Input.GetMouseButtonUp(1))
                 {
                     if (UnitsSelected.Count() > 0)
                     {
-                        int i = 0;
-                        foreach (UnitFormation form in formationsInUse)
-                        {
-                            //if (form.Computed)
-                            //{
-                            if (!form.IsHidden())
-                            {
-                                UnitsSelected.ElementAt(i).SetFormation(form);
-                                form.Hide();
-                            }
-                            //}
-                            //else
-                            //{
-                            //    form.Recompute();
-                            //    UnitsSelected.First().SetFormation(form);
-                            //    form.Hide();
-                            //}
-                            i++;
-                        }
-                        formationsInUse.Clear();
+                        Globals.GetFormationGroupController.SendToUnits(UnitsSelected);
+                        Globals.GetFormationGroupController.Hide();
                     }
                 }
                 #endregion

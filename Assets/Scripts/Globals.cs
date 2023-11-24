@@ -75,4 +75,11 @@ public static class Globals
         }
     }
 
+    public static FormationGroupController GetFormationGroupController
+    {
+        get
+        {
+            return GameObject.Find("Map/Markers").GetComponent<FormationGroupController>();
+        }
+    }
 }

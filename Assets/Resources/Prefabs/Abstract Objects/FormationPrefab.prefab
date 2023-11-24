@@ -44,18 +44,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b570c5968dca254d98cb0132c682232, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MarkerPrefab: {fileID: 757332550598786821, guid: 1e71ac154e543464a8b9810b6bc4a20c, type: 3}
-  Positions: []
-  Markers: []
+  leftAnchorMarker: {fileID: 0}
+  rightAnchorMarker: {fileID: 0}
+  pivotMarker: {fileID: 0}
+  DebugMarkerPrefab: {fileID: 757332550598786821, guid: 16a8ff3b562b150439bd0b04772d0469, type: 3}
   Blanks: 0
   Size: 0
   Rows: 0
   Columns: 0
-  Spacing: 0
-  UnitSize: 1
+  Spacing: 2
+  MinColumns: 1
+  MinRows: 1
   LeftAnchor: {x: 0, y: 0, z: 0}
   RightAnchor: {x: 0, y: 0, z: 0}
   FacingDirection: {x: 0, y: 0, z: 0}
-  WeightCenter: {x: 0, y: 0, z: 0}
-  Computed: 0
   Attached: 0
+  Positions: []
+  _markersInUse: []
+  ShowDebugMarkers: 1
