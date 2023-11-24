@@ -35,7 +35,7 @@ public class UnitGroupController : MonoBehaviour
     public float SalvoShootersRequired = 0.8f; //in percentage of possible shooters
     public float SalvoShootingWindow = 1f; //in seconds
 
-    private UnitFormation Formation;
+    public UnitFormation Formation;
 
     public EUnitFormationType FormationType = EUnitFormationType.Heap;
 
@@ -59,6 +59,12 @@ public class UnitGroupController : MonoBehaviour
 
             }
         }
+
+        Formation = UnitFormation.GetFormationsToUse(1).First();
+        Formation.Initialize(CurrentSize, 0.5f, transform.position + Vector3.left*10f);
+        Formation.Recompute(transform.position + Vector3.right*10f);
+        SetFormation(Formation);
+
     }
 
     // Start is called before the first frame update
@@ -123,7 +129,6 @@ public class UnitGroupController : MonoBehaviour
                         shootersTotal++;
                     }
                 }
-                Debug.Log(((float)unitsReady / shootersTotal));
                 if (((float)unitsReady / shootersTotal) >= SalvoShootersRequired)
                 {
                     SalvoIssueTime = System.DateTime.Now;
@@ -140,7 +145,12 @@ public class UnitGroupController : MonoBehaviour
 
     public void SetFormation(UnitFormation formation)
     {
+        if (Formation != null)
+        {
+            Formation.Attached = false;
+        }
         Formation = formation;
+        Formation.Attached = true;
 
         foreach (UnitController unit in Units)
         {

@@ -47,6 +47,7 @@ MonoBehaviour:
   MarkerPrefab: {fileID: 757332550598786821, guid: 1e71ac154e543464a8b9810b6bc4a20c, type: 3}
   Positions: []
   Markers: []
+  Blanks: 0
   Size: 0
   Rows: 0
   Columns: 0
@@ -54,3 +55,7 @@ MonoBehaviour:
   UnitSize: 1
   LeftAnchor: {x: 0, y: 0, z: 0}
   RightAnchor: {x: 0, y: 0, z: 0}
+  FacingDirection: {x: 0, y: 0, z: 0}
+  WeightCenter: {x: 0, y: 0, z: 0}
+  Computed: 0
+  Attached: 0

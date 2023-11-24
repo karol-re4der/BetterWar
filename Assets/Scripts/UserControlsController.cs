@@ -16,7 +16,7 @@ public class UserControlsController : MonoBehaviour
     public BetterToggle debugToggle2;
     public BetterToggle debugToggle3;
 
-
+    public List<UnitFormation> formationsInUse = new List<UnitFormation>();
     public List<UnitGroupController> UnitsSelected = new List<UnitGroupController>();
 
     // Start is called before the first frame update
@@ -52,55 +52,83 @@ public class UserControlsController : MonoBehaviour
                         ClearSelected();
                     }
                 }
-                else if (Input.GetMouseButtonDown(1))
+                #region Selection
+                if (Input.GetMouseButtonDown(1))
                 {
                     if (UnitsSelected.Count() > 0)
                     {
-                        GetDefaultFormation().Initialize(UnitsSelected.First().CurrentSize, 0.5f, clickPos);
+                        formationsInUse.Clear();
+                        formationsInUse = UnitFormation.GetFormationsToUse(UnitsSelected.Count());
+                        Debug.Log(formationsInUse.Count());
+                        int i = 0;
+                        foreach(UnitFormation form in formationsInUse)
+                        {
+                            form.Initialize(UnitsSelected.ElementAt(i).CurrentSize, 0.5f, clickPos);
+                            i++;
+                        }
                     }
                 }
                 else if (Input.GetMouseButton(1))
                 {
                     if (UnitsSelected.Count() > 0)
                     {
-                        GetDefaultFormation().Recompute(clickPos);
-                        GetDefaultFormation().Visualise();
+                        Vector3 cachedLeftAnchor = formationsInUse.First().LeftAnchor;
+                        float formationMargin = 2f;
+                        float totalWeight = formationsInUse.Sum(x => x.MaxFrontage)+(formationsInUse.Count()-1)*formationMargin;
+                        float totalWidth = Mathf.Min(Vector3.Distance(formationsInUse.First().LeftAnchor, clickPos), totalWeight);
+                        float frontageRequired = formationsInUse.Sum(x => x.MinFrontage) + (formationsInUse.Count() - 1) * formationMargin;
+                        float frontageInUse = 0f;
+
+                        foreach (UnitFormation form in formationsInUse)
+                        {
+                            if (totalWidth > frontageRequired)
+                            {
+                                float formationPart = form.MaxFrontage / totalWeight;
+                                float rightAnchorShift = (formationPart * totalWidth + frontageInUse);
+
+                                Vector3 rightAnchor = Vector3.Lerp(formationsInUse.First().LeftAnchor, clickPos, rightAnchorShift / totalWidth);
+
+                                form.Recompute(rightAnchor, frontageInUse);
+
+                                form.Visualise();
+
+                                frontageInUse = rightAnchorShift + formationMargin;
+                            }
+                            else
+                            {
+                                form.Hide();
+                            }
+                        }
+                        Debug.Log("");
                     }
                 }
                 else if (Input.GetMouseButtonUp(1))
                 {
-                    if (UnitsSelected.Count() > 0 && GetDefaultFormation().Computed)
+                    if (UnitsSelected.Count() > 0)
                     {
-                        SendFormationToUnit();
-                        GetDefaultFormation().Hide();
+                        int i = 0;
+                        foreach (UnitFormation form in formationsInUse)
+                        {
+                            //if (form.Computed)
+                            //{
+                            if (!form.IsHidden())
+                            {
+                                UnitsSelected.ElementAt(i).SetFormation(form);
+                                form.Hide();
+                            }
+                            //}
+                            //else
+                            //{
+                            //    form.Recompute();
+                            //    UnitsSelected.First().SetFormation(form);
+                            //    form.Hide();
+                            //}
+                            i++;
+                        }
+                        formationsInUse.Clear();
                     }
-                    else
-                    {
-                        GetDefaultFormation().Recompute();
-                        SendFormationToUnit();
-                        GetDefaultFormation().Hide();
-                    }
                 }
-            }
-        }
-        else
-        {
-            //Selection
-            if (Input.GetMouseButton(1))
-            {
-                if (UnitsSelected.Count() > 0)
-                {
-                    GetDefaultFormation().Recompute(clickPos);
-                    GetDefaultFormation().Visualise();
-                }
-            }
-            else if (Input.GetMouseButtonUp(2))
-            {
-                if (UnitsSelected.Count() > 0 && GetDefaultFormation().Computed)
-                {
-                    SendFormationToUnit();
-                    GetDefaultFormation().Hide();
-                }
+                #endregion
             }
         }
     }
@@ -135,29 +163,6 @@ public class UserControlsController : MonoBehaviour
 
         }
         return null;
-    }
-
-    private UnitFormation GetDefaultFormation()
-    {
-        UnitFormation formation = null;
-        try
-        {
-            formation = Globals.GetMarkersSpace.GetChild(0).GetComponent<UnitFormation>();
-        }
-        catch (Exception e)
-        {
-            formation = GameObject.Instantiate(FormationPrefab, Globals.GetMarkersSpace).GetComponent<UnitFormation>();
-        }
-
-        return formation;
-    }
-
-    private void SendFormationToUnit()
-    {
-        if (UnitsSelected.Count() > 0)
-        {
-            UnitsSelected.First().SetFormation(GetDefaultFormation());
-        }
     }
 
     public void SwitchPlayer()
