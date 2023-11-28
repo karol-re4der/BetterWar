@@ -243,6 +243,9 @@ public class UnitGroupController : MonoBehaviour
 
     private UnitGroupController FindClosestEnemy()
     {
+        Globals.GetStats.RegisterEvent("GroupLookForTarget", 1);
+
+
         UnitGroupController closestEnemy = null;
         float shortestDistance = float.MaxValue;
 
@@ -304,6 +307,8 @@ public class UnitGroupController : MonoBehaviour
 
     public void Reform()
     {
+        Globals.GetStats.RegisterEvent("GroupTryReform", 1);
+
         Formation.Reform(this, Globals.GetFormationGroupController.GetUnitsMargin());
         SetFormation(Formation);
         ReformNeeded = false;

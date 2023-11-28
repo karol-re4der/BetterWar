@@ -27,6 +27,8 @@ public class ProjectileSystem : MonoBehaviour
         ProjectileController pooledProjectile = projectiles.Find(x => !x.IsActive);
         if (pooledProjectile == null)
         {
+            Globals.GetStats.RegisterEvent("ProjectilesInPool", 1);
+
             pooledProjectile = GameObject.Instantiate(ProjectilePrefab, Globals.GetProjectileSpace).GetComponent<ProjectileController>();
             projectiles.Add(pooledProjectile);
         }
@@ -41,6 +43,8 @@ public class ProjectileSystem : MonoBehaviour
         ProjectileController pooledProjectile = projectiles.Find(x => !x.IsActive);
         if (pooledProjectile == null)
         {
+            Globals.GetStats.RegisterEvent("ProjectilesInPool", 1);
+
             pooledProjectile = GameObject.Instantiate(ProjectilePrefab, Globals.GetProjectileSpace).GetComponent<ProjectileController>();
             projectiles.Add(pooledProjectile);
         }
@@ -60,6 +64,7 @@ public class ProjectileSystem : MonoBehaviour
         GameObject pooledSmoke = smokes.Find(x => !x.GetComponent<ParticleSystem>().isPlaying);
         if (pooledSmoke == null)
         {
+            Globals.GetStats.RegisterEvent("SmokesInPool", 1);
             pooledSmoke = GameObject.Instantiate(SmokePrefab, pos, Quaternion.identity, Globals.GetEffectsSpace);
             smokes.Add(pooledSmoke);
         }

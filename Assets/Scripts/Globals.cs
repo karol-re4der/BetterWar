@@ -4,6 +4,14 @@ using UnityEngine;
 
 public static class Globals
 {
+    public static StatisticsCollector GetStats
+    {
+        get
+        {
+            return GameObject.Find("Main Camera").GetComponent<StatisticsCollector>();
+        }
+    }
+
     public static UserControlsController GetUserControls
     {
         get

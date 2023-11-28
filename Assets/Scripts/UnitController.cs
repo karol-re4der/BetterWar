@@ -267,6 +267,8 @@ public class UnitController : MonoBehaviour
 
     private void TakeAim(UnitGroupController targetGroup)
     {
+        Globals.GetStats.RegisterEvent("UnitTakeAim", 1);
+
         List<UnitController> targetUnits = new List<UnitController>();
         //targetUnits = targetGroup.Units.OrderBy(x => Vector3.Distance(x.transform.position, transform.position)).Where(x => Vector3.Distance(x.transform.position, transform.position)<OwnerGroup.SightRange).ToList(); //this query it ugly please fix later
         targetUnits = targetGroup.Units.Where(x => TargetUnitAngled(x) && TargetUnitInRange(x) && TargetUnitInSight(x)).OrderBy(x => Vector3.Distance(GetModelShootingPoint(), x.GetModelCenterPoint())).ToList();
@@ -289,6 +291,8 @@ public class UnitController : MonoBehaviour
 
     private void Shoot()
     {
+        Globals.GetStats.RegisterEvent("UnitShoot", 1);
+
         //Reset shooting variables
         ReadyToShoot = false;
         ReloadProgress = 0;

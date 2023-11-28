@@ -204,6 +204,7 @@ public class FormationGroupController : MonoBehaviour
 
     private GameObject createNewMarker()
     {
+        Globals.GetStats.RegisterEvent("MarkersInPool", 1);
         return GameObject.Instantiate(MarkerPrefab, Globals.GetMarkersSpace);
     }
 
