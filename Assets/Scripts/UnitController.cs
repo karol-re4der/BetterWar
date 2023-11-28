@@ -21,7 +21,6 @@ public class UnitController : MonoBehaviour
     public bool TargetInSight = false;
     public bool TargetAngled = false;
     public float ReloadProgress = 0f;
-    public float ReloadSpeed = 0.1f;
     public int UnitIndex;
     public UnitController AimedAt;
     public bool ReadyToShoot = true;
@@ -31,6 +30,7 @@ public class UnitController : MonoBehaviour
     public float DistanceTowardsTargetPosition;
     public float CurrentSpeed;
     public EUnitMovementMode MovementMode = EUnitMovementMode.Loose;
+    public float IndividualShootingSpeed = 0f;
 
 
     [Header("Settings")]
@@ -45,7 +45,10 @@ public class UnitController : MonoBehaviour
     public float HeightVariation = 0.2f;
     public float WidthVariation = 0.1f;
     public float ColorVariation = 0.1f;
+    public float ReloadSpeedVariation = 0.1f; //Percentage deviation from ShootingSpeed
     public bool FlagBearer = false;
+    public float ReloadSpeed = 0.1f;
+
 
     [Header("References")]
     public Transform CenterPoint;
@@ -54,6 +57,8 @@ public class UnitController : MonoBehaviour
 
     public void Initialize(UnitGroupController owner, bool flag, int index)
     {
+        IndividualShootingSpeed += ReloadSpeed + (ReloadSpeed * UnityEngine.Random.Range(-ReloadSpeedVariation, ReloadSpeedVariation));
+
         UnitIndex = index;
         OwnerGroup = owner;
         FlagBearer = flag;
@@ -329,7 +334,7 @@ public class UnitController : MonoBehaviour
         }
         else
         {
-            ReloadProgress += ReloadSpeed * Time.deltaTime;
+            ReloadProgress += IndividualShootingSpeed * Time.deltaTime;
         }
     }
 

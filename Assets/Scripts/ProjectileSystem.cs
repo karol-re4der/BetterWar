@@ -31,7 +31,8 @@ public class ProjectileSystem : MonoBehaviour
             projectiles.Add(pooledProjectile);
         }
 
-        if (addSmoke) AddSmoke(from);
+        Vector3 smokePos = Vector3.MoveTowards(from, to, 1f);
+        if (addSmoke) AddSmoke(smokePos);
         pooledProjectile.LaunchAndHit(from, to);
     }
 
@@ -44,7 +45,8 @@ public class ProjectileSystem : MonoBehaviour
             projectiles.Add(pooledProjectile);
         }
 
-        if (addSmoke) AddSmoke(from);
+        Vector3 smokePos = Vector3.MoveTowards(from, direction, 1f);
+        if (addSmoke) AddSmoke(smokePos);
         pooledProjectile.LaunchInDirection(from, direction);
     }
 

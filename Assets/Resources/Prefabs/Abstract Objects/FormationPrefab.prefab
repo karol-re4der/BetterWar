@@ -52,7 +52,6 @@ MonoBehaviour:
   Size: 0
   Rows: 0
   Columns: 0
-  Spacing: 2
   MinColumns: 1
   MinRows: 1
   LeftAnchor: {x: 0, y: 0, z: 0}
@@ -61,4 +60,4 @@ MonoBehaviour:
   Attached: 0
   Positions: []
   _markersInUse: []
-  ShowDebugMarkers: 1
+  ShowDebugMarkers: 0

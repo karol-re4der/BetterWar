@@ -25,13 +25,21 @@ public class UnitGroupController : MonoBehaviour
     public GameObject UnitPrefab;
 
     [Header("Runtime")]
+    public bool ReformNeeded = false;
     public int CurrentSize = 0;
+    public int CurrentReloaded = 0;
+    public float CurrentReloadProgress = 0;
+    public int CurrentInShootingPosition = 0;
     public UnitGroupController EnemyTarget;
     public EUnitFiringMode FiringMode = EUnitFiringMode.AtOrder;
     public System.DateTime SalvoIssueTime = System.DateTime.MinValue;
+    public System.DateTime LastReformTime = System.DateTime.MinValue;
 
     [Header("Initial State")]
     public int InitialSize = 100;
+
+    [Header("Settings")]
+    public float ReformCheckFrequency = 1f;
     public float SalvoShootersRequired = 0.8f; //in percentage of possible shooters
     public float SalvoShootingWindow = 1f; //in seconds
 
@@ -57,14 +65,11 @@ public class UnitGroupController : MonoBehaviour
             else
             {
 
+                //Formation = Globals.GetFormationGroupController().GetFormationsToUse(1).First();
+                //Formation.Recompute(transform.position, Vetor3.left, Globals.GetFormationGroupController());
+                //SetFormation(Formation);
             }
         }
-
-        //Formation = Globals.GetFormationGroupController().GetFormationsToUse(1).First();
-        //Formation.Initialize(CurrentSize, 0.5f, transform.position + Vector3.left*10f);
-        //Formation.Recompute(transform.position + Vector3.right*10f);
-        //SetFormation(Formation);
-
     }
 
     // Start is called before the first frame update
@@ -77,11 +82,17 @@ public class UnitGroupController : MonoBehaviour
     void Update()
     {
         UpdateSizeCounter();
+        UpdateReloadedCounter();
         UpdateWeigthCenter();
 
         if (EnemyTarget == null || !EnemyInRange(EnemyTarget))
         {
             EnemyTarget = FindClosestEnemy();
+        }
+
+        if(ReformNeeded &&(System.DateTime.Now-LastReformTime).Seconds > ReformCheckFrequency)
+        {
+            Reform();
         }
     }
 
@@ -95,10 +106,39 @@ public class UnitGroupController : MonoBehaviour
 
     private void UpdateSizeCounter()
     {
+        int sizeCache = CurrentSize;
         CurrentSize = 0;
         foreach (UnitController unit in Units)
         {
             CurrentSize++;
+        }
+
+        if (sizeCache != CurrentSize)
+        {
+            ReformNeeded = true;
+        }
+    }
+
+    private void UpdateReloadedCounter()
+    {
+        CurrentReloaded = 0;
+        CurrentReloadProgress = 0;
+        CurrentInShootingPosition = 0;
+        foreach (UnitController unit in Units)
+        {
+            if (unit.InShootingPosition)
+            {
+                if (unit.ReloadProgress > 1)
+                {
+                    CurrentReloaded++;
+                    CurrentReloadProgress++;
+                }
+                else
+                {
+                    CurrentReloadProgress += unit.ReloadProgress;
+                }
+                CurrentInShootingPosition++;
+            }
         }
     }
 
@@ -260,5 +300,12 @@ public class UnitGroupController : MonoBehaviour
     public void RemoveUnit(UnitController unit)
     {
         Units.Remove(unit);
+    }
+
+    public void Reform()
+    {
+        Formation.Reform(this, Globals.GetFormationGroupController.GetUnitsMargin());
+        SetFormation(Formation);
+        ReformNeeded = false;
     }
 }

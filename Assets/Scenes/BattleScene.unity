@@ -2801,14 +2801,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e4f160080b1bf4489814afbdcc38071, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MarginSize: 0
+  Spacing: 2
   GroupPivot: {x: 0, y: 0, z: 0}
   leftAnchorMarker: {fileID: 0}
   rightAnchorMarker: {fileID: 0}
   pivotMarker: {fileID: 0}
   FormationPrefab: {fileID: 5486910340057054645, guid: 8d3c8da3b0ddf2a46b8068367e36543c, type: 3}
   DebugMarkerPrefab: {fileID: 757332550598786821, guid: 16a8ff3b562b150439bd0b04772d0469, type: 3}
-  ShowDebugMarkers: 1
+  MarkerPrefab: {fileID: 757332550598786821, guid: 1e71ac154e543464a8b9810b6bc4a20c, type: 3}
+  ShowDebugMarkers: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

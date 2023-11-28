@@ -9,6 +9,8 @@ public class UnitIconController : MonoBehaviour, IPointerClickHandler, IPointerE
 {
     public UnitGroupController UnitGroup;
     public GameObject SizeBar;
+    public GameObject ReloadBar;
+    public GameObject SalvoTreshold;
     public TextMeshProUGUI SizeText;
     public Color BarColorFull = Color.green;
     public Color BarColorHalf = Color.yellow;
@@ -19,8 +21,8 @@ public class UnitIconController : MonoBehaviour, IPointerClickHandler, IPointerE
 
     private bool _selected = false;
 
-
-    private int prevSize = 0;
+    private int _prevReloadProgress = 0;
+    private int _prevSize = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -31,32 +33,43 @@ public class UnitIconController : MonoBehaviour, IPointerClickHandler, IPointerE
     // Update is called once per frame
     void Update()
     {
-        if(UnitGroup != null)
+        if (UnitGroup != null)
         {
-            if (prevSize != UnitGroup.CurrentSize)
+            if (_prevSize != UnitGroup.CurrentSize)
             {
-                //Change text
-                SizeText.text = UnitGroup.CurrentSize + "/" + UnitGroup.InitialSize;
-                prevSize = UnitGroup.CurrentSize;
+                _prevSize = UnitGroup.CurrentSize;
 
-                //Resize bar
-                float ratio = (float)UnitGroup.CurrentSize / UnitGroup.InitialSize;
-                Color col = Color.Lerp(BarColorFull, BarColorEmpty, 1-ratio);
-                SizeBar.GetComponent<Image>().color = col;
-                SetLeft(SizeBar.GetComponent<RectTransform>(), 5);
-                SetRight(SizeBar.GetComponent<RectTransform>(), 85-(80*ratio));
+                SizeText.text = UnitGroup.CurrentSize + "/" + UnitGroup.InitialSize;
+                float ratio = UnitGroup.CurrentSize > 0 ? ((float)UnitGroup.CurrentSize / UnitGroup.InitialSize) : 0;
+                Color col = Color.Lerp(BarColorFull, BarColorEmpty, 1 - ratio);
+                //SizeBar.GetComponent<Scrollbar>().color = col;
+                SizeBar.GetComponent<Scrollbar>().size = ratio;
+            }
+
+            //If in salvo mode, set indicator
+
+            //Resize bar
+            if (_prevReloadProgress != UnitGroup.CurrentReloadProgress)
+            {
+                float ratio = UnitGroup.CurrentInShootingPosition > 0 ? ((float)UnitGroup.CurrentReloadProgress / UnitGroup.CurrentInShootingPosition) : 0;
+                Color col = Color.Lerp(BarColorFull, BarColorEmpty, 1 - ratio);
+
+                ColorBlock block = ReloadBar.GetComponent<Scrollbar>().colors;
+                block.normalColor = col;
+                ReloadBar.GetComponent<Scrollbar>().colors = block;
+                ReloadBar.GetComponent<Scrollbar>().size = ratio;
+
+                if (UnitGroup.FiringMode == EUnitFiringMode.Salvo)
+                {
+                    SalvoTreshold.SetActive(true);
+                    SalvoTreshold.GetComponent<Scrollbar>().value = UnitGroup.SalvoShootersRequired;
+                }
+                else
+                {
+                    SalvoTreshold.SetActive(false);
+                }
             }
         }
-    }
-
-    private void SetLeft(RectTransform rt, float left)
-    {
-        rt.offsetMin = new Vector2(left, rt.offsetMin.y);
-    }
-
-    private void SetRight(RectTransform rt, float right)
-    {
-        rt.offsetMax = new Vector2(-right, rt.offsetMax.y);
     }
 
     #region mouse events

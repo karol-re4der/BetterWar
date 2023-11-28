@@ -96,22 +96,6 @@ public class FormationGroupController : MonoBehaviour
             _formationsInUse.ElementAt(i).Reform(leftAnchorShifted, rightAnchorShifted, unitsSelected.ElementAt(i), GetUnitsMargin());
             frontageInUse = rightShift + GetFormationsMargin()/totalWidth;
         }
-
-        //float totalWeight = _formationsInUse.Sum(x => x.GetMaxFrontage(GetUnitsMargin())) + (_formationsInUse.Count() - 1) * GetFormationsMargin();
-        //float totalWidth = Mathf.Max(0.01f, Vector3.Distance(leftAnchor, rightAnchor));
-        //float frontageInUse = 0;
-        //for (int i = 0; i < _formationsInUse.Count(); i++)
-        //{
-        //    float formationWeight = _formationsInUse.ElementAt(i).GetMaxFrontage(GetUnitsMargin()) / totalWeight;
-        //    float leftShift = frontageInUse;
-        //    float rightShift = frontageInUse + formationWeight;
-        //    Vector3 leftAnchorShifted = Vector3.Lerp(leftAnchor, rightAnchor, leftShift);
-        //    Vector3 rightAnchorShifted = Vector3.Lerp(leftAnchor, rightAnchor, rightShift);
-
-        //    _formationsInUse.ElementAt(i).Reform(leftAnchorShifted, rightAnchorShifted, unitsSelected.ElementAt(i), GetUnitsMargin());
-        //    frontageInUse += formationWeight;
-        //    frontageInUse += GetFormationsMargin() / totalWidth;
-        //}
     }
 
     public float GetUnitsMargin()

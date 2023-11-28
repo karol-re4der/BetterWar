@@ -69,6 +69,11 @@ public class UnitFormation:MonoBehaviour
     //    return (Columns>0 && leftAnchor!=rightAnchor)? (Vector3.Distance(leftAnchor, rightAnchor) % (Columns*Spacing)) : 0;
     //}
 
+    public void Reform(UnitGroupController unit, float spacing)
+    {
+        Reform(LeftAnchor, RightAnchor, unit, spacing);
+    }
+
     public void Reform(Vector3 leftAnchor, Vector3 rightAnchor, UnitGroupController unit, float spacing)
     {
         LeftAnchor = leftAnchor;
@@ -121,6 +126,11 @@ public class UnitFormation:MonoBehaviour
                 }
             }
         }
+
+        while (Positions.Count()>Size)
+        {
+            Positions.RemoveAt(Size);
+        }
     }
 
     public bool IsHidden()
@@ -160,6 +170,17 @@ public class UnitFormation:MonoBehaviour
 
     public bool IsShootingPosition(int i)
     {
-        return false;
+        if (Blanks > 0 && i >= Columns * (Rows - 1))
+        {
+            return false;
+        }
+        if (i < Columns || i % Columns == 0 || i % Columns == Columns - 1)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

@@ -504,8 +504,7 @@ MonoBehaviour:
   TargetInRange: 0
   TargetInSight: 0
   TargetAngled: 0
-  ReloadProgress: 0
-  ReloadSpeed: 0.01
+  ReloadProgress: 1
   UnitIndex: 0
   AimedAt: {fileID: 0}
   ReadyToShoot: 1
@@ -515,7 +514,8 @@ MonoBehaviour:
   DistanceTowardsTargetPosition: 0
   CurrentSpeed: 0
   MovementMode: 0
-  ProjectileAccuracy: 2
+  IndividualShootingSpeed: 0
+  ProjectileAccuracy: 3
   SightAngle: 120
   MovementSpeedMax_Loose: 6
   MovementSpeedMax_Formation: 3
@@ -526,7 +526,9 @@ MonoBehaviour:
   HeightVariation: 0.2
   WidthVariation: 0.3
   ColorVariation: 0.3
+  ReloadSpeedVariation: 0.05
   FlagBearer: 0
+  ReloadSpeed: 0.05
   CenterPoint: {fileID: 4565345809216414616}
   ShootingPoint: {fileID: 3070121452562542815}
 --- !u!1 &5098623894064369315
