@@ -10,9 +10,23 @@ public enum EUnitMovementMode
     Standstill
 }
 
+public enum EWeaponType
+{
+    Melee,
+    Ranged,
+    Flag
+}
+
 public class UnitController : MonoBehaviour
 {
     public UnitGroupController OwnerGroup;
+
+    [Header("Stats")]
+    public int EnemiesHit = 0;
+    public int AlliesHit = 0;
+    public int ShotsFired = 0;
+    public int ShotsMissed = 0;
+
 
     [Header("Runtime")]
     public bool IsAlive = true;
@@ -53,15 +67,40 @@ public class UnitController : MonoBehaviour
     [Header("References")]
     public Transform CenterPoint;
     public Transform ShootingPoint;
+    public GameObject Weapon_Ranged;
+    public GameObject Weapon_Melee;
+    public GameObject Weapon_Flag;
+    public Animator AnimationController;
 
 
-    public void Initialize(UnitGroupController owner, bool flag, int index)
+    private System.DateTime _lastTryShoot = System.DateTime.Now;
+    private float _tryShootEvery = 1f;
+    private float _highlightPhase = 0f;
+
+
+
+    public void Initialize(UnitGroupController owner, int index, EWeaponType weaponType)
     {
+        float animOffset = 1f/UnityEngine.Random.Range(0, 10);
+        AnimationController.SetFloat("AnimationOffset", animOffset);
+
+        switch (weaponType)
+        {
+            case EWeaponType.Ranged:
+                Weapon_Ranged.SetActive(true);
+                break;
+            case EWeaponType.Melee:
+                Weapon_Melee.SetActive(true);
+                break;
+            case EWeaponType.Flag:
+                Weapon_Flag.SetActive(true);
+                break;
+        }
+
         IndividualShootingSpeed += ReloadSpeed + (ReloadSpeed * UnityEngine.Random.Range(-ReloadSpeedVariation, ReloadSpeedVariation));
 
         UnitIndex = index;
         OwnerGroup = owner;
-        FlagBearer = flag;
 
         //Set scale
         Vector3 newScale = transform.localScale;
@@ -76,7 +115,8 @@ public class UnitController : MonoBehaviour
         Color playerColor = OwnerGroup.OwnerPlayer.PlayerColor;
         playerColor = new Color(playerColor.r + Random.Range(-ColorVariation / 2, ColorVariation / 2), playerColor.g + Random.Range(-ColorVariation / 2, ColorVariation / 2), playerColor.b + Random.Range(-ColorVariation / 2, ColorVariation / 2));
         //transform.Find("Model").GetComponent<MeshRenderer>().materials[0].color = playerColor;
-        transform.Find("Model/Flag/Banner").GetComponent<MeshRenderer>().materials[0].color = playerColor;
+        transform.Find("Model/Weapon/Flag/Banner").GetComponent<MeshRenderer>().materials[0].color = playerColor;
+        GetComponent<Outline>().OutlineColor = OwnerGroup.OwnerPlayer.PlayerColor;
 
         //Set flag
         if (FlagBearer)
@@ -85,7 +125,7 @@ public class UnitController : MonoBehaviour
             transform.Find("Model/Weapon").gameObject.SetActive(false);
         }
 
-        SwitchAnimation("UnitIdle");
+
     }
 
     // Start is called before the first frame update
@@ -98,6 +138,7 @@ public class UnitController : MonoBehaviour
     {
         if (IsAlive)
         {
+            //Movement
             if (DistanceTowardsTargetPosition != 0)
             {
                 MoveTowardsTargetPosition();
@@ -108,52 +149,66 @@ public class UnitController : MonoBehaviour
                 RotateTowardsTargetPosition();
             }
 
-            if (MovementMode == EUnitMovementMode.Standstill)
+            //Shooting
+            if ((System.DateTime.Now - _lastTryShoot).TotalMilliseconds > _tryShootEvery*1000)
             {
-                if (InShootingPosition)
+                TryShoot();
+                _lastTryShoot = System.DateTime.Now;
+
+                //Random idle animation in here for optimalization reasons only
+                if(Random.Range(0, 1000) == 1)
                 {
-                    if (OwnerGroup.EnemyTarget != null)
+                    AnimationController.SetTrigger("LookAround");
+                }
+            }
+            TryReload();
+        }
+    }
+
+    private void TryShoot()
+    {
+        if (MovementMode == EUnitMovementMode.Standstill)
+        {
+            if (InShootingPosition)
+            {
+                if (OwnerGroup.EnemyTarget != null)
+                {
+                    if (ReadyToShoot)
                     {
-                        if (ReadyToShoot)
+                        if (AimedAt == null)
                         {
-                            if (AimedAt == null)
-                            {
-                                TakeAim(OwnerGroup.EnemyTarget);
-                            }
-                            else
-                            {
-                                TargetAngled = TargetUnitAngled(AimedAt);
-                                if (TargetAngled)
-                                {
-                                    TargetInRange = TargetUnitInRange(AimedAt);
-                                    if (!TargetInRange)
-                                    {
-                                        TakeAim(OwnerGroup.EnemyTarget);
-                                    }
-                                    else
-                                    {
-                                        TargetInSight = TargetUnitInSight(AimedAt);
-                                        if (!TargetInSight)
-                                        {
-                                            TakeAim(OwnerGroup.EnemyTarget);
-                                        }
-                                        else if(OwnerGroup.IsFireAllowed())
-                                        {
-                                            Shoot();
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    TakeAim(OwnerGroup.EnemyTarget);
-                                }
-                            }
+                            TakeAim(OwnerGroup.EnemyTarget);
                         }
                         else
                         {
-                            Reload();
+                            TargetAngled = TargetUnitAngled(AimedAt);
+                            if (TargetAngled)
+                            {
+                                TargetInRange = TargetUnitInRange(AimedAt);
+                                if (!TargetInRange)
+                                {
+                                    TakeAim(OwnerGroup.EnemyTarget);
+                                }
+                                else
+                                {
+                                    TargetInSight = TargetUnitInSight(AimedAt);
+                                    if (!TargetInSight)
+                                    {
+                                        TakeAim(OwnerGroup.EnemyTarget);
+                                    }
+                                    else if (OwnerGroup.IsFireAllowed())
+                                    {
+                                        Shoot();
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                TakeAim(OwnerGroup.EnemyTarget);
+                            }
                         }
                     }
+                    
                 }
             }
         }
@@ -213,6 +268,8 @@ public class UnitController : MonoBehaviour
                 currentMaxSpeed = MovementSpeedMax_Loose;
             }
             CurrentSpeed = Mathf.Min(currentMaxSpeed, CurrentSpeed + MovementAcceleration * Time.deltaTime);
+            AnimationController.SetFloat("MovementSpeed", currentMaxSpeed > 0 ? CurrentSpeed/currentMaxSpeed : 0);
+            AnimationController.SetBool("IsAiming", false);
 
             //Move
             transform.position = Vector3.MoveTowards(transform.position, TargetPosition, CurrentSpeed*Time.deltaTime);
@@ -228,6 +285,7 @@ public class UnitController : MonoBehaviour
             {
                 MovementMode = EUnitMovementMode.Formation;
                 CurrentSpeed = MovementSpeedMax_Formation;
+                AngleTowardsTargetPosition = 180;
             }
             else
             {
@@ -282,10 +340,12 @@ public class UnitController : MonoBehaviour
         if (targetUnits.Count() > 0)
         {
             AimedAt = targetUnits.ElementAt(Random.Range(0, targetUnits.Count()));
+            AnimationController.SetBool("IsAiming", true);
         }
         else
         {
             AimedAt = null;
+            AnimationController.SetBool("IsAiming", false);
         }
     }
 
@@ -319,26 +379,39 @@ public class UnitController : MonoBehaviour
         //Shoot
         if (somethingHit)
         {
+            if (hit.collider.transform.parent.gameObject.GetComponent<UnitController>().OwnerGroup.OwnerPlayer != OwnerGroup.OwnerPlayer){
+                AlliesHit++;
+            }
+            else
+            {
+                EnemiesHit++;
+            }
+
             Globals.GetProjectileSystem.NewProjectileAtPoint(GetModelShootingPoint(), hit.point, true);
             hit.collider.transform.parent.gameObject.GetComponent<UnitController>().RegisterHit(dir, timeToHit);
         }
         else
         {
+            ShotsMissed++;
             Globals.GetProjectileSystem.NewProjectileInDirection(GetModelShootingPoint(), dir, true);
         }
 
+        ShotsFired++;
         AimedAt = null;
     }
 
-    private void Reload()
+    private void TryReload()
     {
         if (ReloadProgress >= 1f)
         {
             ReadyToShoot = true;
+            AnimationController.SetBool("IsReloaded", true);
+
         }
         else
         {
             ReloadProgress += IndividualShootingSpeed * Time.deltaTime;
+            AnimationController.SetBool("IsReloaded", false);
         }
     }
 
@@ -377,11 +450,30 @@ public class UnitController : MonoBehaviour
     {
         IsAlive = false;
         OwnerGroup.RemoveUnit(this);
-        SwitchAnimation("UnitDead");
+        OwnerGroup.ReformNeeded = true;
+
+        AnimationController.SetTrigger("Die");
     }
 
-    private void SwitchAnimation(string animationName)
+    public void HighlightUnit()
     {
-        transform.Find("Model").gameObject.GetComponent<Animator>().Play(animationName);
+        GetComponent<Outline>().enabled = true;
+        _highlightPhase = 0;
+        Invoke("_fadeHighlight", 0.033f);
+    }
+
+    private void _fadeHighlight()
+    {
+        if (_highlightPhase<180)
+        {
+            _highlightPhase += (_highlightPhase < 9) ? 8 : 4;
+            GetComponent<Outline>().OutlineWidth = Mathf.Sin(Mathf.Deg2Rad*_highlightPhase)*4;
+            Invoke("_fadeHighlight", 0.033f);
+        }
+        else
+        {
+            GetComponent<Outline>().OutlineWidth = 0;
+            GetComponent<Outline>().enabled = false;
+        }
     }
 }

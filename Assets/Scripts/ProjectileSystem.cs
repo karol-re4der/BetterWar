@@ -10,6 +10,8 @@ public class ProjectileSystem : MonoBehaviour
     public GameObject SmokePrefab;
     public GameObject ProjectilePrefab;
 
+    public bool CreateSmoke = true;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -33,8 +35,12 @@ public class ProjectileSystem : MonoBehaviour
             projectiles.Add(pooledProjectile);
         }
 
-        Vector3 smokePos = Vector3.MoveTowards(from, to, 1f);
-        if (addSmoke) AddSmoke(smokePos);
+        if (CreateSmoke)
+        {
+            Vector3 smokePos = Vector3.MoveTowards(from, to, 1f);
+            if (addSmoke) AddSmoke(smokePos);
+        }
+        
         pooledProjectile.LaunchAndHit(from, to);
     }
 
@@ -49,8 +55,11 @@ public class ProjectileSystem : MonoBehaviour
             projectiles.Add(pooledProjectile);
         }
 
-        Vector3 smokePos = Vector3.MoveTowards(from, direction, 1f);
-        if (addSmoke) AddSmoke(smokePos);
+        if (CreateSmoke)
+        {
+            Vector3 smokePos = Vector3.MoveTowards(from, direction, 1f);
+            if (addSmoke) AddSmoke(smokePos);
+        }
         pooledProjectile.LaunchInDirection(from, direction);
     }
 

@@ -51,7 +51,7 @@ public class UnitGroupController : MonoBehaviour
     {
         OwnerPlayer = owner;
 
-        CreateUnit(transform.position, true, 0);
+        CreateUnit(transform.position, 0, EWeaponType.Flag);
         for (int i = 1; i < CurrentSize; i++)
         {
             if (FormationType == EUnitFormationType.Heap)
@@ -60,7 +60,8 @@ public class UnitGroupController : MonoBehaviour
                 Vector3 pos = transform.position;
                 pos.x += Random.Range(0, formationSize) - formationSize / 2;
                 pos.z += Random.Range(0, formationSize) - formationSize / 2;
-                CreateUnit(pos, Random.Range(0, 20)==5, i);
+
+                CreateUnit(pos, i, (Random.Range(0, 20) == 5)?EWeaponType.Flag:EWeaponType.Ranged);
             }
             else
             {
@@ -96,10 +97,10 @@ public class UnitGroupController : MonoBehaviour
         }
     }
 
-    private GameObject CreateUnit(Vector3 position, bool flag, int index)
+    private GameObject CreateUnit(Vector3 position, int index, EWeaponType weaponType)
     {
         GameObject newUnit = Instantiate(UnitPrefab, position, Quaternion.identity, Globals.GetUnitSpace);
-        newUnit.GetComponent<UnitController>().Initialize(this, flag, index);
+        newUnit.GetComponent<UnitController>().Initialize(this, index, weaponType);
         Units.Add(newUnit.GetComponent<UnitController>());
         return newUnit;
     }
@@ -111,11 +112,6 @@ public class UnitGroupController : MonoBehaviour
         foreach (UnitController unit in Units)
         {
             CurrentSize++;
-        }
-
-        if (sizeCache != CurrentSize)
-        {
-            ReformNeeded = true;
         }
     }
 
@@ -312,5 +308,15 @@ public class UnitGroupController : MonoBehaviour
         Formation.Reform(this, Globals.GetFormationGroupController.GetUnitsMargin());
         SetFormation(Formation);
         ReformNeeded = false;
+
+        LastReformTime = System.DateTime.Now;
+    }
+
+    public void HighlightGroup()
+    {
+        foreach(UnitController unit in Units)
+        {
+            unit.HighlightUnit();
+        }
     }
 }

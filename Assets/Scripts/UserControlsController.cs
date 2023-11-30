@@ -117,7 +117,7 @@ public class UserControlsController : MonoBehaviour
 
     public void SwitchPlayer()
     {
-        UnitsSelected.Clear();
+        ClearSelected();
 
         if (debugToggle2.isActive)
         {
@@ -161,7 +161,12 @@ public class UserControlsController : MonoBehaviour
         {
             ClearSelected();
         }
-        UnitsSelected.Add(icon.UnitGroup);
+        if (!UnitsSelected.Contains(icon.UnitGroup))
+        {
+            UnitsSelected.Add(icon.UnitGroup);
+            icon.UnitGroup.HighlightGroup();
+            //Globals.GetInterface.GetUnitIcon(icon.UnitGroup).SetSelected(true);
+        }
 
         RefreshSelectionOnInterface();
     }
@@ -172,8 +177,13 @@ public class UserControlsController : MonoBehaviour
         {
             ClearSelected();
         }
-        UnitsSelected.Add(unit.OwnerGroup);
-        Globals.GetInterface.GetUnitIcon(unit).SetSelected(true);
+        if (!UnitsSelected.Contains(unit.OwnerGroup))
+        {
+            UnitsSelected.Add(unit.OwnerGroup);
+            unit.OwnerGroup.HighlightGroup();
+            Globals.GetInterface.GetUnitIcon(unit).SetSelected(true);
+        }
+
 
         RefreshSelectionOnInterface();
     }

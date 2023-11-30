@@ -66,8 +66,6 @@ public class FormationGroupController : MonoBehaviour
             rightAnchor = Vector3.Lerp(leftAnchor, rightAnchor,
             maxFrontage / Vector3.Distance(leftAnchor, rightAnchor));
         }
-        Debug.Log(Vector3.Distance(leftAnchor, rightAnchor));
-
 
         //Set debug markers
         leftAnchorMarker.transform.position = leftAnchor;

@@ -140,16 +140,19 @@ public class UnitFormation:MonoBehaviour
 
     public void Hide()
     {
-        gameObject.SetActive(false);
+        Update();
+        markerFading();
+    }
+
+    private void markerFading()
+    {
         Update();
 
-        FormationGroupController controller = Globals.GetFormationGroupController;
-        while (_markersInUse.Count()>0)
+        while (_markersInUse.Count() > 0)
         {
             GameObject marker = _markersInUse.First();
-            marker.SetActive(false);
             _markersInUse.Remove(marker);
-            controller.ReturnMarkerToPool(marker);
+            marker.GetComponent<UnitMarkerController>().FadeOut();
         }
     }
 
