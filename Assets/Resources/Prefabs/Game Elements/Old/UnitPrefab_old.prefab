@@ -531,6 +531,10 @@ MonoBehaviour:
   ReloadSpeed: 0.05
   CenterPoint: {fileID: 4565345809216414616}
   ShootingPoint: {fileID: 3070121452562542815}
+  Weapon_Ranged: {fileID: 0}
+  Weapon_Melee: {fileID: 0}
+  Weapon_Flag: {fileID: 0}
+  AnimationController: {fileID: 0}
 --- !u!1 &5098623894064369315
 GameObject:
   m_ObjectHideFlags: 0
@@ -546,7 +550,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5084209202989977065
 Transform:
   m_ObjectHideFlags: 0
