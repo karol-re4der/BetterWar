@@ -54,12 +54,8 @@ public class FormationGroupController : MonoBehaviour
         //correct right anchor to make selection granular
         if (Vector3.Distance(leftAnchor, rightAnchor) > GetUnitsMargin())
         {
-            Debug.Log(Vector3.Distance(leftAnchor, rightAnchor));
-
             rightAnchor = Vector3.Lerp(rightAnchor, leftAnchor,
             (Vector3.Distance(leftAnchor, rightAnchor) % GetUnitsMargin()) / Vector3.Distance(leftAnchor, rightAnchor));
-
-            Debug.Log(Vector3.Distance(leftAnchor, rightAnchor));
 
             //Remove too much frontage
             float maxFrontage = _formationsInUse.Sum(x => x.GetMaxFrontage(GetUnitsMargin())) + (_formationsInUse.Count() - 1) * GetFormationsMargin();

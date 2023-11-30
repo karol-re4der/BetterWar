@@ -49,7 +49,7 @@ public class UnitController : MonoBehaviour
 
     [Header("Settings")]
     public float ProjectileAccuracy = 1f; //measured in angle deviation
-    public float SightAngle = 120;
+    public float SightAngle = 120; //In degrees, total angle
     public float MovementSpeedMax_Loose = 4f;
     public float MovementSpeedMax_Formation = 2f;
     public float MovementAcceleration = 1f;
@@ -148,6 +148,12 @@ public class UnitController : MonoBehaviour
             {
                 RotateTowardsTargetPosition();
             }
+            else if (AimedAt != null)
+            {
+                if(AngleToTarget(AimedAt)>10){
+                    AngleTowardsTargetPosition = 180;
+                }
+            }
 
             //Shooting
             if ((System.DateTime.Now - _lastTryShoot).TotalMilliseconds > _tryShootEvery*1000)
@@ -223,35 +229,28 @@ public class UnitController : MonoBehaviour
 
     private void RotateTowardsTargetPosition()
     {
-        if (MovementMode == EUnitMovementMode.Formation)
+        Quaternion targetRotation = Quaternion.identity;
+        Vector3 selectedTargetFacing = Vector3.zero;
+
+        if (MovementMode == EUnitMovementMode.Formation || MovementMode == EUnitMovementMode.Standstill)
             //Rotate towards direction where formation is facing, then sidestep into position
         {
-            Quaternion targetRotation = Quaternion.identity;
-            if (TargetFacing != Vector3.zero)
-            {
-                targetRotation = Quaternion.LookRotation(TargetFacing);
-            }
-            if (transform.rotation != targetRotation)
-            {
-                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
-            }
+            selectedTargetFacing = (AimedAt!=null) ? AimedAt.transform.position - transform.position : TargetFacing;
+            targetRotation = Quaternion.LookRotation(selectedTargetFacing);
         }
         else if(MovementMode == EUnitMovementMode.Loose)
             //Rotate towards target position, then run
         {
-            Quaternion targetRotation = Quaternion.identity;
-            if (TargetFacing != Vector3.zero)
-            {
-                targetRotation = Quaternion.LookRotation(TargetPosition - transform.position);
-            }
-            if (transform.rotation != targetRotation)
-            {
-                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
-            }
+            selectedTargetFacing = TargetPosition - transform.position;
+            targetRotation = Quaternion.LookRotation(selectedTargetFacing);
         }
 
-        Vector3 targetDir = TargetPosition - transform.position;
-        AngleTowardsTargetPosition = Vector3.Angle(targetDir, transform.forward);
+        if (transform.rotation != targetRotation)
+        {
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
+        }
+
+        AngleTowardsTargetPosition = Vector3.Angle(selectedTargetFacing, transform.forward);
     }
 
     private void MoveTowardsTargetPosition()
@@ -268,8 +267,6 @@ public class UnitController : MonoBehaviour
                 currentMaxSpeed = MovementSpeedMax_Loose;
             }
             CurrentSpeed = Mathf.Min(currentMaxSpeed, CurrentSpeed + MovementAcceleration * Time.deltaTime);
-            AnimationController.SetFloat("MovementSpeed", currentMaxSpeed > 0 ? CurrentSpeed/currentMaxSpeed : 0);
-            AnimationController.SetBool("IsAiming", false);
 
             //Move
             transform.position = Vector3.MoveTowards(transform.position, TargetPosition, CurrentSpeed*Time.deltaTime);
@@ -291,6 +288,9 @@ public class UnitController : MonoBehaviour
             {
                 MovementMode = EUnitMovementMode.Loose;
             }
+
+            AnimationController.SetFloat("MovementSpeed", currentMaxSpeed > 0 ? CurrentSpeed / currentMaxSpeed : 0);
+            //AnimationController.SetBool("IsAiming", false);
         }
     }
 
@@ -301,8 +301,13 @@ public class UnitController : MonoBehaviour
 
     private bool TargetUnitAngled(UnitController unit)
     {
-        Vector3 towardsTarget = unit.GetModelCenterPoint() - GetModelShootingPoint();
-        return Vector3.Angle(towardsTarget, TargetFacing) < SightAngle / 2;
+        return AngleToTarget(unit) < SightAngle / 2;
+    }
+
+    private float AngleToTarget(UnitController unit)
+    {
+        Vector3 towardsTarget = unit.GetModelCenterPoint() - GetModelCenterPoint();
+        return Vector3.Angle(towardsTarget, TargetFacing);
     }
 
     private bool TargetUnitInSight(UnitController unit)
@@ -347,6 +352,9 @@ public class UnitController : MonoBehaviour
             AimedAt = null;
             AnimationController.SetBool("IsAiming", false);
         }
+
+        //Reset rotation
+        AngleTowardsTargetPosition = 180;
     }
 
     private void Shoot()

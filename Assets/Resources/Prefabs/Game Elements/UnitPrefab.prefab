@@ -659,6 +659,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   OwnerGroup: {fileID: 0}
+  EnemiesHit: 0
+  AlliesHit: 0
+  ShotsFired: 0
+  ShotsMissed: 0
   IsAlive: 1
   InShootingPosition: 0
   TargetInRange: 0
@@ -682,7 +686,7 @@ MonoBehaviour:
   MovementAcceleration: 3
   ClippingDistance: 0.1
   MovementModeChangeDistance: 3
-  RotationSpeed: 720
+  RotationSpeed: 120
   HeightVariation: 0.2
   WidthVariation: 0.3
   ColorVariation: 0.3
