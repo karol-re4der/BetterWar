@@ -158,8 +158,17 @@ MonoBehaviour:
   WeightCenter: {x: 0, y: 0, z: 0}
   OwnerPlayer: {fileID: 0}
   Units: []
-  UnitPrefab: {fileID: 4041705540262562691, guid: eff19b3b45115fd4084e96863d8782d4, type: 3}
+  UnitPrefab: {fileID: 4041705540262562691, guid: b81c50c9fbd247f4789d21099b761999, type: 3}
+  ReformNeeded: 0
   CurrentSize: 0
+  CurrentReloaded: 0
+  CurrentReloadProgress: 0
+  CurrentInShootingPosition: 0
   EnemyTarget: {fileID: 0}
+  FiringMode: 0
   InitialSize: 100
-  Formation: 0
+  ReformCheckFrequency: 4
+  SalvoShootersRequired: 0.8
+  SalvoShootingWindow: 1
+  Formation: {fileID: 0}
+  FormationType: 0
