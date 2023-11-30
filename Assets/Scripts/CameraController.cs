@@ -16,7 +16,7 @@ public class CameraController : MonoBehaviour
     public Vector3 verticalDragRotation = new Vector3();
 
     //Debug values
-    [Header("Debug Values")]
+    [Header("Runtime Values")]
     public float horizontalInput = 0;
     public float verticalInput = 0;
     public float angularInput = 0;
@@ -25,11 +25,15 @@ public class CameraController : MonoBehaviour
     public Vector3 dragPivot = new Vector3();
     public float deltaTime = 0;
     public bool dragActive = false;
+    public float speedModifier = 0f;
 
     //Settings
     [Header("Settings")]
+    public int sideScrollAreaSize = 10;
+    public float bottomScrollAreaSize = 0.3f; //in percentage of total screen height
     public float cameraHeightMin = 1;
     public float cameraHeightMax = 10;
+    public float cameraHeightSensitivityFalloff = 10; //speed boost at max height, linear
     public float distanceSensitivity = 20;
     public float directionalSensitivity = 25;
     public float angularSensitivity = 300;
@@ -38,6 +42,9 @@ public class CameraController : MonoBehaviour
     public bool invertAngular = false;
     public bool invertDistance = false;
     public bool invertDrag = false;
+    public float speedBoostStrength = 2;
+    public bool mouseScrollEnabled = true;
+
 
     // Start is called before the first frame update
     void Start()
@@ -50,18 +57,27 @@ public class CameraController : MonoBehaviour
     {
         deltaTime = Time.deltaTime;
 
+        //Set strength mod
+        speedModifier = Mathf.Max(1f, ((transform.position.y - cameraHeightMin) / (cameraHeightMax - cameraHeightMin)) * cameraHeightSensitivityFalloff);
+
+
+        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+        {
+            speedModifier *= speedBoostStrength;
+        }
+
         //Get inputs
-        horizontalInput = Input.GetAxis("Horizontal") * directionalSensitivity * deltaTime;
-        verticalInput = Input.GetAxis("Vertical") * directionalSensitivity * deltaTime;
-        angularInput = (invertAngular ? -1 : 1) * Input.GetAxis("Angular") * angularSensitivity * deltaTime;
+        horizontalInput = Input.GetAxis("Horizontal") * directionalSensitivity * deltaTime * speedModifier;
+        verticalInput = Input.GetAxis("Vertical") * directionalSensitivity * deltaTime * speedModifier;
+        angularInput = (invertAngular ? -1 : 1) * Input.GetAxis("Angular") * angularSensitivity * deltaTime * speedModifier;
 
         if (Input.GetAxis("Mouse ScrollWheel") != 0)
         {
-            distanceInput = (invertDistance ? -1 : 1) * Input.GetAxis("Mouse ScrollWheel") * distanceSensitivity * deltaTime;
+            distanceInput = (invertDistance ? -1 : 1) * Input.GetAxis("Mouse ScrollWheel") * distanceSensitivity * deltaTime * speedModifier;
         }
         else if (distanceInput > 0)
         {
-            distanceInput -= scrollSmoothing * deltaTime;
+            distanceInput -= scrollSmoothing * deltaTime * speedModifier;
             if (distanceInput < 0)
             {
                 distanceInput = 0;
@@ -69,7 +85,7 @@ public class CameraController : MonoBehaviour
         }
         else if (distanceInput < 0)
         {
-            distanceInput += scrollSmoothing * deltaTime;
+            distanceInput += scrollSmoothing * deltaTime * speedModifier;
             if (distanceInput > 0)
             {
                 distanceInput = 0;
@@ -92,6 +108,44 @@ public class CameraController : MonoBehaviour
         {
             dragInput = Vector3.zero;
             dragActive = false;
+        }
+
+        //Add mouse on screen side input
+        if (mouseScrollEnabled)
+        {
+            Vector2 mousePos = Input.mousePosition;
+            if (mousePos.x < sideScrollAreaSize)
+            {
+                if (mousePos.y < Screen.height * bottomScrollAreaSize)
+                {
+                    horizontalInput -= directionalSensitivity * deltaTime * speedModifier /2;
+                }
+                else
+                {
+                    angularInput -= angularSensitivity * deltaTime * speedModifier / 2;
+                }
+            }
+            else if (mousePos.x > Screen.width - sideScrollAreaSize)
+            {
+                if (mousePos.y < Screen.height * bottomScrollAreaSize)
+                {
+                    horizontalInput += directionalSensitivity * deltaTime * speedModifier / 2;
+
+                }
+                else
+                {
+                    angularInput += angularSensitivity * deltaTime * speedModifier / 2;
+                }
+            }
+
+            if (mousePos.y < sideScrollAreaSize)
+            {
+                verticalInput -= directionalSensitivity * deltaTime * speedModifier;
+            }
+            else if (mousePos.y > Screen.height-sideScrollAreaSize)
+            {
+                verticalInput += directionalSensitivity * deltaTime * speedModifier;
+            }
         }
 
         //Compute shifts

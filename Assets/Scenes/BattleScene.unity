@@ -1124,16 +1124,19 @@ MonoBehaviour:
   dragPivot: {x: 0, y: 0, z: 0}
   deltaTime: 0
   dragActive: 0
-  cameraHeightMin: 2
-  cameraHeightMax: 50
-  distanceSensitivity: 60
-  directionalSensitivity: 25
+  speedModifier: 0
+  cameraHeightMin: 10
+  cameraHeightMax: 100
+  cameraHeightSensitivityFalloff: 4
+  distanceSensitivity: 50
+  directionalSensitivity: 60
   angularSensitivity: 300
   dragSensitivity: 10
   scrollSmoothing: 5
   invertAngular: 0
   invertDistance: 0
   invertDrag: 1
+  speedBoostStrength: 2
 --- !u!114 &963194230
 MonoBehaviour:
   m_ObjectHideFlags: 0
