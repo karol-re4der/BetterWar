@@ -19,8 +19,6 @@ public class UnitIconController : MonoBehaviour, IPointerClickHandler, IPointerE
     public Color BackgroundColorSelected = Color.gray;
     public Color BackgroundColorHighlighted = Color.gray;
 
-    private bool _selected = false;
-
     private int _prevReloadProgress = 0;
     private int _prevSize = 0;
 
@@ -80,14 +78,13 @@ public class UnitIconController : MonoBehaviour, IPointerClickHandler, IPointerE
 
     public void SetSelected(bool selected)
     {
-        _selected = selected;
         if (selected)
         {
-            GetComponent<Image>().color = BackgroundColorSelected;
+            transform.localScale = new Vector3(1.05f, 1.05f, 1f);
         }
         else
         {
-            GetComponent<Image>().color = BackgroundColorRegular;
+            transform.localScale = new Vector3(1f,1f,1f);
         }
     }
 
@@ -98,14 +95,7 @@ public class UnitIconController : MonoBehaviour, IPointerClickHandler, IPointerE
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (_selected)
-        {
-            GetComponent<Image>().color = BackgroundColorSelected;
-        }
-        else
-        {
-            GetComponent<Image>().color = BackgroundColorRegular;
-        }
+        GetComponent<Image>().color = BackgroundColorRegular;
     }
     #endregion
 }

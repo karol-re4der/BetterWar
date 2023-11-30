@@ -24,6 +24,16 @@ public class InterfaceController : MonoBehaviour
         
     }
 
+    public List<UnitIconController> GetAllUnitIcons()
+    {
+        return GetComponentsInChildren<UnitIconController>().ToList();
+    }
+
+    public int GetIconIndex(UnitIconController icon)
+    {
+        return GetAllUnitIcons().IndexOf(icon);
+    }
+
     public void RecreateUnitIcons()
     {
         foreach(Transform icon in UnitsPanel.transform)

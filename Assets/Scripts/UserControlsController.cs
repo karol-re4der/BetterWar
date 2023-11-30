@@ -161,11 +161,25 @@ public class UserControlsController : MonoBehaviour
         {
             ClearSelected();
         }
-        if (!UnitsSelected.Contains(icon.UnitGroup))
+
+        if (UnitsSelected.Count > 0)
+        {
+            int iconIndex = Globals.GetInterface.GetIconIndex(icon);
+            int firstSelectedIndex = Globals.GetInterface.GetIconIndex(Globals.GetInterface.GetAllUnitIcons().First(x => UnitsSelected.Contains(x.UnitGroup)));
+            for (int i = Mathf.Min(iconIndex, firstSelectedIndex); i <= Mathf.Max(iconIndex, firstSelectedIndex); i++)
+            {
+                UnitIconController nextIcon = Globals.GetInterface.GetAllUnitIcons().ElementAt(i);
+                if (!UnitsSelected.Contains(nextIcon.UnitGroup))
+                {
+                    UnitsSelected.Add(nextIcon.UnitGroup);
+                    nextIcon.UnitGroup.HighlightGroup();
+                }
+            }
+        }
+        else
         {
             UnitsSelected.Add(icon.UnitGroup);
             icon.UnitGroup.HighlightGroup();
-            //Globals.GetInterface.GetUnitIcon(icon.UnitGroup).SetSelected(true);
         }
 
         RefreshSelectionOnInterface();
