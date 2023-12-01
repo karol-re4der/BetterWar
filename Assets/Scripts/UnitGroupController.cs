@@ -34,6 +34,7 @@ public class UnitGroupController : MonoBehaviour
     public EUnitFiringMode FiringMode = EUnitFiringMode.AtOrder;
     public System.DateTime SalvoIssueTime = System.DateTime.MinValue;
     public System.DateTime LastReformTime = System.DateTime.MinValue;
+    public bool IsSelected = false;
 
     [Header("Initial State")]
     public int InitialSize = 100;

@@ -150,7 +150,12 @@ public class UserControlsController : MonoBehaviour
     #region Selection
     public void ClearSelected()
     {
+        foreach(UnitGroupController group in UnitsSelected)
+        {
+            group.IsSelected = false;
+        }
         UnitsSelected.Clear();
+
 
         RefreshSelectionOnInterface();
     }
@@ -173,11 +178,13 @@ public class UserControlsController : MonoBehaviour
                 {
                     UnitsSelected.Add(nextIcon.UnitGroup);
                     nextIcon.UnitGroup.HighlightGroup();
+                    nextIcon.UnitGroup.IsSelected = true;
                 }
             }
         }
         else
         {
+            icon.UnitGroup.IsSelected = true;
             UnitsSelected.Add(icon.UnitGroup);
             icon.UnitGroup.HighlightGroup();
         }
@@ -194,6 +201,7 @@ public class UserControlsController : MonoBehaviour
         if (!UnitsSelected.Contains(unit.OwnerGroup))
         {
             UnitsSelected.Add(unit.OwnerGroup);
+            unit.OwnerGroup.IsSelected = true;
             unit.OwnerGroup.HighlightGroup();
             Globals.GetInterface.GetUnitIcon(unit).SetSelected(true);
         }

@@ -4,6 +4,14 @@ using UnityEngine;
 
 public static class Globals
 {
+    public static Terrain GetTerrain
+    {
+        get
+        {
+            return GameObject.Find("Map/Terrain").GetComponent<Terrain>();
+        }
+    }
+
     public static StatisticsCollector GetStats
     {
         get

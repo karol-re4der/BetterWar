@@ -62,6 +62,7 @@ public class UnitController : MonoBehaviour
     public float ReloadSpeedVariation = 0.1f; //Percentage deviation from ShootingSpeed
     public bool FlagBearer = false;
     public float ReloadSpeed = 0.1f;
+    public float RangeLineWidth = 4f;
 
 
     [Header("References")]
@@ -71,6 +72,7 @@ public class UnitController : MonoBehaviour
     public GameObject Weapon_Melee;
     public GameObject Weapon_Flag;
     public Animator AnimationController;
+    public GameObject RangeIndicator;
 
 
     private System.DateTime _lastTryShoot = System.DateTime.Now;
@@ -131,6 +133,7 @@ public class UnitController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+
     }
 
     // Update is called once per frame
@@ -168,6 +171,16 @@ public class UnitController : MonoBehaviour
                 }
             }
             TryReload();
+
+            //Show range if selected
+            if(OwnerGroup.IsSelected && InShootingPosition)
+            {
+                HighlightRange();
+            }
+            else
+            {
+                HideRange();
+            }
         }
     }
 
@@ -463,20 +476,21 @@ public class UnitController : MonoBehaviour
         AnimationController.SetTrigger("Die");
     }
 
+    #region highlights
     public void HighlightUnit()
     {
         GetComponent<Outline>().enabled = true;
         _highlightPhase = 0;
-        Invoke("_fadeHighlight", 0.033f);
+        Invoke("fadeOutUnitHighlight", 0.033f);
     }
 
-    private void _fadeHighlight()
+    private void fadeOutUnitHighlight()
     {
         if (_highlightPhase<180)
         {
             _highlightPhase += (_highlightPhase < 9) ? 8 : 4;
             GetComponent<Outline>().OutlineWidth = Mathf.Sin(Mathf.Deg2Rad*_highlightPhase)*4;
-            Invoke("_fadeHighlight", 0.033f);
+            Invoke("fadeOutUnitHighlight", 0.033f);
         }
         else
         {
@@ -484,4 +498,85 @@ public class UnitController : MonoBehaviour
             GetComponent<Outline>().enabled = false;
         }
     }
+
+    public void HighlightRange()
+    {
+        CancelInvoke("fadeOutRangeHighlight");
+
+        int pointsDensity = 20;
+
+        RangeIndicator.SetActive(true);
+        LineRenderer lrend = RangeIndicator.GetComponent<LineRenderer>();
+
+        if (lrend.endWidth < 0.1f)
+        {
+            lrend.endWidth = 0.1f;
+            lrend.startWidth = 0.1f;
+        }
+        else if (!IsInvoking("fadeInRangeHighlight") && lrend.endWidth<RangeLineWidth)
+        {
+            CancelInvoke("fadeOutRangeHighlight");
+            Invoke("fadeInRangeHighlight", 0.03f);
+        }
+
+        float anglePerPoint = SightAngle / pointsDensity * Mathf.Deg2Rad;
+
+        List<Vector3> points = new List<Vector3>();
+        points.Add(transform.position + Vector3.RotateTowards(transform.forward, -transform.forward, -(SightAngle / 2 * Mathf.Deg2Rad), 0) * OwnerGroup.SightRange * 0.3f);
+        for (int i = 0; i < pointsDensity; i++)
+        {
+            Vector3 currentHeading = Vector3.RotateTowards(transform.forward, -transform.forward, -(SightAngle / 2 * Mathf.Deg2Rad) +(i*anglePerPoint), 0);
+            Vector3 newPoint = transform.position + currentHeading*OwnerGroup.SightRange;
+
+            newPoint.y = Globals.GetTerrain.SampleHeight(newPoint)+0.1f;
+
+            points.Add(newPoint);
+        }
+        points.Add(transform.position + Vector3.RotateTowards(transform.forward, -transform.forward, (SightAngle / 2 * Mathf.Deg2Rad), 0) * OwnerGroup.SightRange * 0.3f);
+
+        lrend.positionCount = pointsDensity+2;
+        lrend.SetPositions(points.ToArray());
+    }
+
+    private void fadeOutRangeHighlight()
+    {
+        LineRenderer lrend = RangeIndicator.GetComponent<LineRenderer>();
+        float newWidth = lrend.endWidth;
+        newWidth *= 0.9f;
+        lrend.endWidth = newWidth;
+        lrend.startWidth = newWidth;
+
+        if (lrend.endWidth > 0.1f)
+        {
+            Invoke("fadeOutRangeHighlight", 0.03f);
+        }
+        else
+        {
+            RangeIndicator.SetActive(false);
+        }
+    }
+
+    private void fadeInRangeHighlight()
+    {
+        LineRenderer lrend = RangeIndicator.GetComponent<LineRenderer>();
+        float newWidth = lrend.endWidth;
+        newWidth *= 1.1f;
+        lrend.endWidth = newWidth;
+        lrend.startWidth = newWidth;
+
+        if (lrend.endWidth < RangeLineWidth)
+        {
+            Invoke("fadeInRangeHighlight", 0.03f);
+        }
+    }
+
+    public void HideRange()
+    {
+        if (RangeIndicator.activeSelf && !IsInvoking("fadeOutRangeHighlight"))
+        {
+            CancelInvoke("fadeInRangeHighlight");
+            Invoke("fadeOutRangeHighlight", 0.03f);
+        }
+    }
+    #endregion
 }
