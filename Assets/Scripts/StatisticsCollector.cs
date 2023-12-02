@@ -11,7 +11,7 @@ public class StatisticsCollector : MonoBehaviour
     public bool CountStats = true;
 
     [Header("Group stats")]
-    public float GroupTryReformPerSecond = 0;
+    public float GroupTryFillVoidsPerSecond = 0;
     public float GroupLookForTargetPerSecond = 0;
 
     [Header("Unit stats")]
@@ -34,7 +34,7 @@ public class StatisticsCollector : MonoBehaviour
 
     void Start()
     {
-        _stats.Add("GroupTryReform", 0);
+        _stats.Add("GroupTryFillVoids", 0);
         _stats.Add("GroupLookForTarget", 0);
         _stats.Add("UnitTakeAim", 0);
         _stats.Add("UnitShoot", 0);
@@ -51,18 +51,18 @@ public class StatisticsCollector : MonoBehaviour
             float timePassed = (DateTime.Now - _lastUpdate).Seconds;
             if (timePassed >= 1)
             {
-                GroupTryReformPerSecond = Mathf.Round((GroupTryReformPerSecond+ (_stats["GroupTryReform"]/ timePassed)) / 2);
-                GroupLookForTargetPerSecond = Mathf.Round((GroupTryReformPerSecond + (_stats["GroupLookForTarget"] / timePassed)) / 2);
+                GroupTryFillVoidsPerSecond = Mathf.Round((GroupTryFillVoidsPerSecond + (_stats["GroupTryFillVoids"] / timePassed)) / 2);
+                GroupLookForTargetPerSecond = Mathf.Round((GroupLookForTargetPerSecond + (_stats["GroupLookForTarget"] / timePassed)) / 2);
 
-                UnitTakeAimPerSecond = Mathf.Round((GroupTryReformPerSecond + (_stats["UnitTakeAim"] / timePassed)) / 2);
-                UnitShootPerSecond = Mathf.Round((GroupTryReformPerSecond + (_stats["UnitShoot"] / timePassed)) / 2);
+                UnitTakeAimPerSecond = Mathf.Round((UnitTakeAimPerSecond + (_stats["UnitTakeAim"] / timePassed)) / 2);
+                UnitShootPerSecond = Mathf.Round((UnitShootPerSecond + (_stats["UnitShoot"] / timePassed)) / 2);
 
                 MarkersInPool = _stats["MarkersInPool"];
                 SmokesInPool = _stats["SmokesInPool"];
                 ProjectilesInPool = _stats["ProjectilesInPool"];
 
 
-                _stats["GroupTryReform"] = 0;
+                _stats["GroupTryFillVoids"] = 0;
                 _stats["GroupLookForTarget"] = 0;
                 _stats["UnitTakeAim"] = 0;
                 _stats["UnitShoot"] = 0;

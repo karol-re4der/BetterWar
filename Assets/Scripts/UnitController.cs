@@ -27,10 +27,8 @@ public class UnitController : MonoBehaviour
     public int ShotsFired = 0;
     public int ShotsMissed = 0;
 
-
     [Header("Runtime")]
     public bool IsAlive = true;
-    public bool InShootingPosition = false;
     public bool TargetInRange = false;
     public bool TargetInSight = false;
     public bool TargetAngled = false;
@@ -45,7 +43,7 @@ public class UnitController : MonoBehaviour
     public float CurrentSpeed;
     public EUnitMovementMode MovementMode = EUnitMovementMode.Loose;
     public float IndividualShootingSpeed = 0f;
-
+    public Vector2 PositionInFormation = Vector2.zero;
 
     [Header("Settings")]
     public float ProjectileAccuracy = 1f; //measured in angle deviation
@@ -63,7 +61,6 @@ public class UnitController : MonoBehaviour
     public bool FlagBearer = false;
     public float ReloadSpeed = 0.1f;
     public float RangeLineWidth = 4f;
-
 
     [Header("References")]
     public Transform CenterPoint;
@@ -173,7 +170,7 @@ public class UnitController : MonoBehaviour
             TryReload();
 
             //Show range if selected
-            if(OwnerGroup.IsSelected && InShootingPosition)
+            if(OwnerGroup.IsSelected && OwnerGroup.Formation.IsShootingPosition(PositionInFormation))
             {
                 HighlightRange();
             }
@@ -188,7 +185,7 @@ public class UnitController : MonoBehaviour
     {
         if (MovementMode == EUnitMovementMode.Standstill)
         {
-            if (InShootingPosition)
+            if (OwnerGroup.Formation.IsShootingPosition(PositionInFormation))
             {
                 if (OwnerGroup.EnemyTarget != null)
                 {
@@ -304,6 +301,10 @@ public class UnitController : MonoBehaviour
 
             AnimationController.SetFloat("MovementSpeed", currentMaxSpeed > 0 ? CurrentSpeed / currentMaxSpeed : 0);
             //AnimationController.SetBool("IsAiming", false);
+        }
+        else
+        {
+            MovementMode = EUnitMovementMode.Standstill;
         }
     }
 
@@ -472,6 +473,11 @@ public class UnitController : MonoBehaviour
         IsAlive = false;
         OwnerGroup.RemoveUnit(this);
         OwnerGroup.ReformNeeded = true;
+
+        foreach(Collider collider in gameObject.GetComponentsInChildren<Collider>())
+        {
+            collider.enabled = false;
+        }
 
         AnimationController.SetTrigger("Die");
     }

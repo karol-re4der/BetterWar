@@ -40,7 +40,7 @@ public class UnitGroupController : MonoBehaviour
     public int InitialSize = 100;
 
     [Header("Settings")]
-    public float ReformCheckFrequency = 1f;
+    public float ReformCheckFrequency = 3f;
     public float SalvoShootersRequired = 0.8f; //in percentage of possible shooters
     public float SalvoShootingWindow = 1f; //in seconds
 
@@ -50,7 +50,7 @@ public class UnitGroupController : MonoBehaviour
 
     public void Initialize(PlayerController owner)
     {
-        UnitActions.Add(new UnitAction("UnitFireMode", new List<string>() { "AtWill", "AtOrder", "Salvo" }));
+        UnitActions.Add(new UnitAction("UnitFireMode", new List<string>() { "AtOrder", "AtWill", "Salvo" }));
         UnitActions.Add(new UnitAction("UnitMovementMode", new List<string>() { "Formation", "Loose" }));
 
         OwnerPlayer = owner;
@@ -95,9 +95,11 @@ public class UnitGroupController : MonoBehaviour
             EnemyTarget = FindClosestEnemy();
         }
 
-        if(ReformNeeded &&(System.DateTime.Now-LastReformTime).Seconds > ReformCheckFrequency)
+        if(ReformNeeded && (System.DateTime.Now-LastReformTime).TotalMilliseconds > ReformCheckFrequency*1000f)
         {
-            Reform(false);
+            FillVoidsInFormation();
+            ReformNeeded = false;
+            LastReformTime = System.DateTime.Now;
         }
     }
 
@@ -126,7 +128,7 @@ public class UnitGroupController : MonoBehaviour
         CurrentInShootingPosition = 0;
         foreach (UnitController unit in Units)
         {
-            if (unit.InShootingPosition)
+            if (Formation.IsShootingPosition(unit.PositionInFormation))
             {
                 if (unit.ReloadProgress > 1)
                 {
@@ -163,7 +165,7 @@ public class UnitGroupController : MonoBehaviour
                     int shootersTotal = 0;
                     foreach (UnitController unit in Units)
                     {
-                        if (unit.InShootingPosition)
+                        if (Formation.IsShootingPosition(unit.PositionInFormation))
                         {
                             if (unit.ReadyToShoot)
                             {
@@ -222,17 +224,93 @@ public class UnitGroupController : MonoBehaviour
 
             closestUnit.NewMovementStarted(movementMode);
 
-            if (formation.IsShootingPosition(unitIndex))
-            {
-                closestUnit.InShootingPosition = true;
-            }
-            else
-            {
-                closestUnit.InShootingPosition = false;
+            closestUnit.PositionInFormation = formation.WorldSpaceToPositionInFormation(pos);
 
-            }
             unitIndex++;
         }
+    }
+
+    public void FillVoidsInFormation()
+    {
+        Globals.GetStats.RegisterEvent("GroupTryFillVoids", 1);
+
+        //Fill from back to front
+        for (int y = 0; y < Formation.Rows; y++)
+        {
+            for (int x = 0; x < Formation.Columns; x++)
+            {
+                UnitController unitAtPosition = Units.Find(u => u.PositionInFormation == new Vector2(x, y));
+
+                if (unitAtPosition == null)
+                {
+                    for (int i = y + 1; i < Formation.Rows; i++)
+                    {
+                        UnitController nextUnit = Units.Find(u => u.PositionInFormation == new Vector2(x, i));
+                        if (nextUnit != null)
+                        {
+                            nextUnit.PositionInFormation = new Vector2(x, y);
+                            nextUnit.TargetPosition = Formation.PositionInFormationToWorldSpace(nextUnit.PositionInFormation);
+                            nextUnit.NewMovementStarted(EUnitMovementMode.Formation);
+                            ReformNeeded = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        //Fill remaining with closest from back rows
+        if (Formation.Columns > 1)
+        {
+            for (int y = 0; y < Formation.Rows; y++)
+            {
+                for (int i = 1; i <= Formation.Columns; i++)
+                {
+                    int dir = -1;
+
+                    if (Formation.Columns % 2 == 0)
+                    {
+                        dir = (i % 2 == 0) ? 1 : -1;
+                    }
+                    else
+                    {
+                        dir = (i % 2 == 0) ? -1 : 1;
+                    }
+
+                    int x = (int)((Formation.Columns / 2) - (dir * Mathf.Floor(i / 2f)));
+                    UnitController unitAtPosition = Units.Find(u => u.PositionInFormation == new Vector2(x, y));
+
+                    if (unitAtPosition == null)
+                    {
+                        UnitController nextUnit = Units.Where(u => u.PositionInFormation.y > y)?.OrderBy(u => Vector2.Distance(new Vector2(x, y), u.PositionInFormation)).FirstOrDefault();
+                        if (nextUnit != null)
+                        {
+                            nextUnit.PositionInFormation = new Vector2(x, y);
+                            nextUnit.TargetPosition = Formation.PositionInFormationToWorldSpace(nextUnit.PositionInFormation);
+                            nextUnit.NewMovementStarted(EUnitMovementMode.Formation);
+                            ReformNeeded = true;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        //for(int y = (int)voidPositionInFormation.y+1; y<Formation.Rows; y++)
+        //{
+        //    UnitController nextUnit = Units.Find(x => x.PositionInFormation.x == voidPositionInFormation.x && x.PositionInFormation.y == y && x.MovementMode==EUnitMovementMode.Standstill);
+        //    if (nextUnit != null)
+        //    {
+        //        RefillVoidInFormation(nextUnit.PositionInFormation, nextUnit.transform.position);
+
+        //        nextUnit.TargetPosition = voidPositionInWorldSpace;
+        //        nextUnit.PositionInFormation = voidPositionInFormation;
+        //        nextUnit.NewMovementStarted(EUnitMovementMode.Formation);
+
+
+        //        return;
+        //    }
+        //}
     }
 
     private List<UnitGroupController> FindEnemiesInSight()
@@ -324,13 +402,8 @@ public class UnitGroupController : MonoBehaviour
 
     public void Reform(bool useRelevantMovementMode)
     {
-        Globals.GetStats.RegisterEvent("GroupTryReform", 1);
-
         Formation.Reform(this, Globals.GetFormationGroupController.GetUnitsMargin());
         SetFormation(Formation, useRelevantMovementMode);
-        ReformNeeded = false;
-
-        LastReformTime = System.DateTime.Now;
     }
 
     public void HighlightGroup()

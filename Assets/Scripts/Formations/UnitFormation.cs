@@ -174,24 +174,56 @@ public class UnitFormation:MonoBehaviour
         }
     }
 
-    public bool IsShootingPosition(int i)
+    public bool IsShootingPosition(Vector2 posInFormation)
     {
-        if (Blanks > 0 && i >= Columns * (Rows - 1))
-        {
-            return false;
-        }
-        if (i < Columns || i % Columns == 0 || i % Columns == Columns - 1)
+        if(posInFormation.x==0 || posInFormation.x == Columns - 1)
         {
             return true;
         }
-        else
+        else if(posInFormation.y == 0)
         {
-            return false;
+            return true;
         }
+        return false;
     }
 
     public bool IsValid()
     {
         return Columns > MinColumns && Rows > MinRows;
+    }
+
+    public Vector3 PositionInFormationToWorldSpace(Vector2 pos)
+    {
+        int i = 0;
+
+        i = (int)pos.x + (int)pos.y * Columns;
+
+        if ((int)pos.y==Rows && Blanks>0)
+        {
+            i -= (int)Mathf.Floor(Blanks / 2f);
+        }
+
+        return Positions.ElementAt(i);
+    }
+
+    public Vector2 WorldSpaceToPositionInFormation(Vector3 pos)
+    {
+        for(int i = 0; i<Positions.Count(); i++)
+        {
+            if (Positions[i] == pos)
+            {
+                float x = i % Columns;
+                float y = i / Columns;
+
+                if(y==Rows-1 && Blanks > 0)
+                {
+                    x += (Mathf.Floor(Blanks / 2f));
+                }
+
+                return new Vector2(x, y);
+            }
+        }
+
+        return Vector2.zero;
     }
 }
