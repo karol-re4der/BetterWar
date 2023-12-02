@@ -194,15 +194,36 @@ public class UnitGroupController : MonoBehaviour
             unit.MovementMode = EUnitMovementMode.Standstill;
         }
 
+        //int unitIndex = 0;
+        //foreach (Vector3 pos in formation.Positions)
+        //{
+        //    UnitController closestUnit = Units.Where(x => x.MovementMode == EUnitMovementMode.Standstill).OrderBy(x => Vector3.Distance(x.transform.position, pos)).First();
+
+        //    closestUnit.TargetPosition = pos;
+        //    closestUnit.TargetFacing = formation.FacingDirection;
+
+        //    closestUnit.NewMovementStarted();
+        //    if (formation.IsShootingPosition(unitIndex))
+        //    {
+        //        closestUnit.InShootingPosition = true;
+        //    }
+        //    else
+        //    {
+        //        closestUnit.InShootingPosition = false;
+
+        //    }
+        //    unitIndex++;
+        //}
+
         int unitIndex = 0;
-        foreach (Vector3 pos in formation.Positions)
+        foreach (Vector3 pos in formation.Positions.OrderByDescending(x=>Vector3.Distance(WeightCenter, x)))
         {
             UnitController closestUnit = Units.Where(x => x.MovementMode == EUnitMovementMode.Standstill).OrderBy(x => Vector3.Distance(x.transform.position, pos)).First();
 
             closestUnit.TargetPosition = pos;
             closestUnit.TargetFacing = formation.FacingDirection;
 
-            closestUnit.NewMovementStarted();
+            closestUnit.NewMovementStarted(EUnitMovementMode.Formation);
             if (formation.IsShootingPosition(unitIndex))
             {
                 closestUnit.InShootingPosition = true;
@@ -278,22 +299,23 @@ public class UnitGroupController : MonoBehaviour
     private void UpdateWeigthCenter()
     {
         WeightCenter = Vector3.zero;
-        if (Units.Count < 10)
-        {
+        //if (Units.Count < 10)
+        //{
             for (int i = 0; i < Units.Count(); i++)
             {
                 WeightCenter += Units[i].transform.position;
             }
             WeightCenter /= Units.Count();
-        }
-        else
-        {
-            for (int i = 0; i < Units.Count(); i+=2)
-            {
-                WeightCenter += Units[i].transform.position;
-            }
-            WeightCenter /= Units.Count()/2;
-        }
+        //}
+        //else
+        //{
+        //    int i = 0;
+        //    for (i = 0; i < Units.Count()/2; i++)
+        //    {
+        //        WeightCenter += Units[i].transform.position;
+        //    }
+        //    WeightCenter /= i;
+        //}
 
     }
 

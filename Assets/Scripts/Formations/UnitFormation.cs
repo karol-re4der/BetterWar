@@ -64,10 +64,10 @@ public class UnitFormation:MonoBehaviour
         return (Size/MinRows)*spacing;
     }
 
-    //public float GetFrontageSurplus(Vector3 leftAnchor, Vector3 rightAnchor)
-    //{
-    //    return (Columns>0 && leftAnchor!=rightAnchor)? (Vector3.Distance(leftAnchor, rightAnchor) % (Columns*Spacing)) : 0;
-    //}
+    public float GetFormationDepth(float spacing)
+    {
+        return Rows * spacing;
+    }
 
     public void Reform(UnitGroupController unit, float spacing)
     {
@@ -81,9 +81,12 @@ public class UnitFormation:MonoBehaviour
         Size = unit.CurrentSize;
 
         //Set debug markers
-        leftAnchorMarker.transform.position = leftAnchor;
-        rightAnchorMarker.transform.position = rightAnchor;
-        pivotMarker.transform.position = Vector3.Lerp(leftAnchor, rightAnchor, 0.5f);
+        if (ShowDebugMarkers)
+        {
+            leftAnchorMarker.transform.position = leftAnchor;
+            rightAnchorMarker.transform.position = rightAnchor;
+            pivotMarker.transform.position = Vector3.Lerp(leftAnchor, rightAnchor, 0.5f);
+        }
 
         if (1 == 1)//Vector3.Distance(LeftAnchorCorrected, rightAnchor)>=sizeUnit)
         {
@@ -185,5 +188,10 @@ public class UnitFormation:MonoBehaviour
         {
             return false;
         }
+    }
+
+    public bool IsValid()
+    {
+        return Columns > MinColumns && Rows > MinRows;
     }
 }

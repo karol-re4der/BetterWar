@@ -16,9 +16,10 @@ public class UserControlsController : MonoBehaviour
     public BetterToggle debugToggle2;
     public BetterToggle debugToggle3;
 
-    private Vector3 selectionStartPoint = Vector3.zero;
+    private Vector3 _selectionStartPoint = Vector3.zero;
+    private DateTime _mouseDownTime = DateTime.MinValue;
 
-    public List<UnitFormation> formationsInUse = new List<UnitFormation>();
+    public List<UnitFormation> FormationsInUse = new List<UnitFormation>();
     public List<UnitGroupController> UnitsSelected = new List<UnitGroupController>();
 
     // Start is called before the first frame update
@@ -57,25 +58,36 @@ public class UserControlsController : MonoBehaviour
                 #region Selection
                 if (Input.GetMouseButtonDown(1))
                 {
+                    _mouseDownTime = DateTime.Now;
                     if (UnitsSelected.Count() > 0)
                     {
-                        selectionStartPoint = clickPos;
+                        _selectionStartPoint = clickPos;
                     }
                 }
                 else if (Input.GetMouseButton(1))
                 {
                     if (UnitsSelected.Count() > 0)
                     {
-                        Globals.GetFormationGroupController.Reform(selectionStartPoint, clickPos, UnitsSelected);
-                        Globals.GetFormationGroupController.Visualise();
+                        bool result = Globals.GetFormationGroupController.Reform(_selectionStartPoint, clickPos, UnitsSelected);
+                        if (result)
+                        {
+                            Globals.GetFormationGroupController.Visualise();
+                        }
                     }
                 }
                 else if (Input.GetMouseButtonUp(1))
                 {
                     if (UnitsSelected.Count() > 0)
                     {
-                        Globals.GetFormationGroupController.SendToUnits(UnitsSelected);
-                        Globals.GetFormationGroupController.Hide();
+                        if ((DateTime.Now - _mouseDownTime).TotalMilliseconds < 200)
+                        {
+                            Globals.GetFormationGroupController.ShiftFormations(clickPos, UnitsSelected);
+                        }
+                        else if(Globals.GetFormationGroupController.IsValid())
+                        {
+                            Globals.GetFormationGroupController.SendToUnits(UnitsSelected);
+                            Globals.GetFormationGroupController.Hide();
+                        }
                     }
                 }
                 #endregion

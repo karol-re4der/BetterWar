@@ -233,11 +233,11 @@ public class UnitController : MonoBehaviour
         }
     }
 
-    public void NewMovementStarted()
+    public void NewMovementStarted(EUnitMovementMode mode = EUnitMovementMode.Loose)
     {
         AngleTowardsTargetPosition = 180;
         DistanceTowardsTargetPosition = 180;
-        MovementMode = EUnitMovementMode.Formation;
+        MovementMode = mode;
     }
 
     private void RotateTowardsTargetPosition()
@@ -299,7 +299,7 @@ public class UnitController : MonoBehaviour
             }
             else
             {
-                MovementMode = EUnitMovementMode.Loose;
+                //MovementMode = EUnitMovementMode.Loose;
             }
 
             AnimationController.SetFloat("MovementSpeed", currentMaxSpeed > 0 ? CurrentSpeed / currentMaxSpeed : 0);

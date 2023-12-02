@@ -49,7 +49,25 @@ public class FormationGroupController : MonoBehaviour
         pivotMarker.SetActive(IsHidden() ? false : ShowDebugMarkers);
     }
 
-    public void Reform(Vector3 leftAnchor, Vector3 rightAnchor, List<UnitGroupController> unitsSelected)
+    public void ShiftFormations(Vector3 targetPosition, List<UnitGroupController> unitsSelected)
+    {
+        foreach(UnitGroupController group in unitsSelected)
+        {
+            Vector3 shift = targetPosition-group.WeightCenter;
+            Vector3 pivotPoint = (group.Formation.LeftAnchor + group.Formation.RightAnchor) / 2;
+            Vector3 leftAnchorShift = pivotPoint - group.Formation.LeftAnchor;
+            Vector3 depthShift = group.Formation.FacingDirection.normalized * (group.Formation.GetFormationDepth(GetUnitsMargin())/2);
+
+            group.Formation.LeftAnchor = targetPosition - leftAnchorShift + depthShift;
+            group.Formation.RightAnchor = targetPosition + leftAnchorShift + depthShift;
+
+            group.Reform();
+            group.Formation.Visualise();
+            group.Formation.Hide();
+        }
+    }
+
+    public bool Reform(Vector3 leftAnchor, Vector3 rightAnchor, List<UnitGroupController> unitsSelected)
     {
         //correct right anchor to make selection granular
         if (Vector3.Distance(leftAnchor, rightAnchor) > GetUnitsMargin())
@@ -64,9 +82,12 @@ public class FormationGroupController : MonoBehaviour
         }
 
         //Set debug markers
-        leftAnchorMarker.transform.position = leftAnchor;
-        rightAnchorMarker.transform.position = rightAnchor;
-        pivotMarker.transform.position = Vector3.Lerp(leftAnchor, rightAnchor, 0.5f);
+        if (ShowDebugMarkers)
+        {
+            leftAnchorMarker.transform.position = leftAnchor;
+            rightAnchorMarker.transform.position = rightAnchor;
+            pivotMarker.transform.position = Vector3.Lerp(leftAnchor, rightAnchor, 0.5f);
+        }
 
         //Prepare enough formations
         for(int i = _formationsInUse.Count(); i<unitsSelected.Count(); i++)
@@ -75,21 +96,35 @@ public class FormationGroupController : MonoBehaviour
         }
 
         //Reform speific formations
-        float totalWeight = _formationsInUse.Sum(x => x.GetMaxFrontage(GetUnitsMargin())) ;
+        float totalWeight = _formationsInUse.Sum(x => x.GetMaxFrontage(GetUnitsMargin()));
         float totalWidth = Mathf.Max(0.01f, Vector3.Distance(leftAnchor, rightAnchor));
-        float unitWidth = Mathf.Max(0.01f, Vector3.Distance(leftAnchor, rightAnchor))-(_formationsInUse.Count() - 1) * GetFormationsMargin();
+        float unitWidth = Mathf.Max(0.01f, Vector3.Distance(leftAnchor, rightAnchor)) - (_formationsInUse.Count() - 1) * GetFormationsMargin();
         float frontageInUse = 0;
-        for(int i = 0; i < _formationsInUse.Count();i++)
+        for (int i = 0; i < _formationsInUse.Count(); i++)
         {
-            float formationWeight = _formationsInUse.ElementAt(i).GetMaxFrontage(GetUnitsMargin()) /totalWeight;
+            float formationWeight = totalWeight>0 ? (_formationsInUse.ElementAt(i).GetMaxFrontage(GetUnitsMargin()) / totalWeight) : 0;
             float leftShift = frontageInUse;
-            float rightShift = frontageInUse+(formationWeight*unitWidth)/totalWidth;
+            float rightShift = frontageInUse + (formationWeight * unitWidth) / totalWidth;
             Vector3 leftAnchorShifted = Vector3.Lerp(leftAnchor, rightAnchor, leftShift);
             Vector3 rightAnchorShifted = Vector3.Lerp(leftAnchor, rightAnchor, rightShift);
 
             _formationsInUse.ElementAt(i).Reform(leftAnchorShifted, rightAnchorShifted, unitsSelected.ElementAt(i), GetUnitsMargin());
-            frontageInUse = rightShift + GetFormationsMargin()/totalWidth;
+            frontageInUse = rightShift + GetFormationsMargin() / totalWidth;
         }
+
+        return IsValid();
+    }
+
+    public bool IsValid()
+    {
+        foreach (UnitFormation formation in _formationsInUse)
+        {
+            if (!formation.IsValid())
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     public float GetUnitsMargin()
