@@ -57,7 +57,8 @@ public class UnitIconController : MonoBehaviour, IPointerClickHandler, IPointerE
                 ReloadBar.GetComponent<Scrollbar>().colors = block;
                 ReloadBar.GetComponent<Scrollbar>().size = ratio;
 
-                if (UnitGroup.FiringMode == EUnitFiringMode.Salvo)
+                UnitAction fireModeAction = UnitGroup.UnitActions.Find(x => x.ActionName.Equals("FireMode"));
+                if (fireModeAction!=null && fireModeAction.GetCurrentState().Equals("Salvo"))
                 {
                     SalvoTreshold.SetActive(true);
                     SalvoTreshold.GetComponent<Scrollbar>().value = UnitGroup.SalvoShootersRequired;

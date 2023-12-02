@@ -61,7 +61,7 @@ public class FormationGroupController : MonoBehaviour
             group.Formation.LeftAnchor = targetPosition - leftAnchorShift + depthShift;
             group.Formation.RightAnchor = targetPosition + leftAnchorShift + depthShift;
 
-            group.Reform();
+            group.Reform(true);
             group.Formation.Visualise();
             group.Formation.Hide();
         }
@@ -166,7 +166,7 @@ public class FormationGroupController : MonoBehaviour
     {
         for(int i = 0; i<(int)Mathf.Min(_formationsInUse.Count(), unitsSelected.Count()); i++)
         {
-            unitsSelected.ElementAt(i).SetFormation(_formationsInUse.ElementAt(i));
+            unitsSelected.ElementAt(i).SetFormation(_formationsInUse.ElementAt(i), true);
         }
     }
 

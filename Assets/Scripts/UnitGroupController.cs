@@ -9,12 +9,12 @@ public enum EUnitFormationType
     Ordered
 }
 
-public enum EUnitFiringMode
-{
-    AtOrder,
-    AtWill,
-    Salvo
-}
+//public enum EUnitFiringMode
+//{
+//    AtOrder,
+//    AtWill,
+//    Salvo
+//}
 
 public class UnitGroupController : MonoBehaviour
 {
@@ -31,10 +31,10 @@ public class UnitGroupController : MonoBehaviour
     public float CurrentReloadProgress = 0;
     public int CurrentInShootingPosition = 0;
     public UnitGroupController EnemyTarget;
-    public EUnitFiringMode FiringMode = EUnitFiringMode.AtOrder;
     public System.DateTime SalvoIssueTime = System.DateTime.MinValue;
     public System.DateTime LastReformTime = System.DateTime.MinValue;
     public bool IsSelected = false;
+    public List<UnitAction> UnitActions = new List<UnitAction>();
 
     [Header("Initial State")]
     public int InitialSize = 100;
@@ -50,6 +50,9 @@ public class UnitGroupController : MonoBehaviour
 
     public void Initialize(PlayerController owner)
     {
+        UnitActions.Add(new UnitAction("UnitFireMode", new List<string>() { "AtWill", "AtOrder", "Salvo" }));
+        UnitActions.Add(new UnitAction("UnitMovementMode", new List<string>() { "Formation", "Loose" }));
+
         OwnerPlayer = owner;
 
         CreateUnit(transform.position, 0, EWeaponType.Flag);
@@ -94,7 +97,7 @@ public class UnitGroupController : MonoBehaviour
 
         if(ReformNeeded &&(System.DateTime.Now-LastReformTime).Seconds > ReformCheckFrequency)
         {
-            Reform();
+            Reform(false);
         }
     }
 
@@ -141,47 +144,62 @@ public class UnitGroupController : MonoBehaviour
 
     public bool IsFireAllowed()
     {
-        if(FiringMode == EUnitFiringMode.AtWill)
+        UnitAction fireModeAction = UnitActions.Find(x => x.ActionName.Equals("UnitFireMode"));
+        if (fireModeAction != null)
         {
-            return true;
-        }
-        else if (FiringMode == EUnitFiringMode.Salvo)
-        {
-            if ((System.DateTime.Now - SalvoIssueTime).TotalSeconds < SalvoShootingWindow)
+            if (fireModeAction.GetCurrentState().Equals("AtWill"))
             {
                 return true;
             }
-            else
+            else if (fireModeAction.GetCurrentState().Equals("Salvo"))
             {
-                int unitsReady = 0;
-                int shootersTotal = 0;
-                foreach (UnitController unit in Units)
+                if ((System.DateTime.Now - SalvoIssueTime).TotalSeconds < SalvoShootingWindow)
                 {
-                    if (unit.InShootingPosition)
-                    {
-                        if (unit.ReadyToShoot)
-                        {
-                            unitsReady++;
-                        }
-                        shootersTotal++;
-                    }
-                }
-                if (((float)unitsReady / shootersTotal) >= SalvoShootersRequired)
-                {
-                    SalvoIssueTime = System.DateTime.Now;
                     return true;
                 }
                 else
                 {
-                    return false;
+                    int unitsReady = 0;
+                    int shootersTotal = 0;
+                    foreach (UnitController unit in Units)
+                    {
+                        if (unit.InShootingPosition)
+                        {
+                            if (unit.ReadyToShoot)
+                            {
+                                unitsReady++;
+                            }
+                            shootersTotal++;
+                        }
+                    }
+                    if (((float)unitsReady / shootersTotal) >= SalvoShootersRequired)
+                    {
+                        SalvoIssueTime = System.DateTime.Now;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
             }
         }
         return false;
     }
 
-    public void SetFormation(UnitFormation formation)
+    public void SetFormation(UnitFormation formation, bool useRelevantMovementMode)
     {
+        EUnitMovementMode movementMode = EUnitMovementMode.Formation;
+
+        if (useRelevantMovementMode)
+        {
+            UnitAction movementModeAction = UnitActions.Find(x => x.ActionName.Equals("UnitMovementMode"));
+            if (movementModeAction != null)
+            {
+                movementMode = movementModeAction.GetCurrentState().Equals("Loose") ? EUnitMovementMode.Loose : EUnitMovementMode.Formation;
+            }
+        }
+
         if (Formation != null)
         {
             Formation.Attached = false;
@@ -194,27 +212,6 @@ public class UnitGroupController : MonoBehaviour
             unit.MovementMode = EUnitMovementMode.Standstill;
         }
 
-        //int unitIndex = 0;
-        //foreach (Vector3 pos in formation.Positions)
-        //{
-        //    UnitController closestUnit = Units.Where(x => x.MovementMode == EUnitMovementMode.Standstill).OrderBy(x => Vector3.Distance(x.transform.position, pos)).First();
-
-        //    closestUnit.TargetPosition = pos;
-        //    closestUnit.TargetFacing = formation.FacingDirection;
-
-        //    closestUnit.NewMovementStarted();
-        //    if (formation.IsShootingPosition(unitIndex))
-        //    {
-        //        closestUnit.InShootingPosition = true;
-        //    }
-        //    else
-        //    {
-        //        closestUnit.InShootingPosition = false;
-
-        //    }
-        //    unitIndex++;
-        //}
-
         int unitIndex = 0;
         foreach (Vector3 pos in formation.Positions.OrderByDescending(x=>Vector3.Distance(WeightCenter, x)))
         {
@@ -223,7 +220,8 @@ public class UnitGroupController : MonoBehaviour
             closestUnit.TargetPosition = pos;
             closestUnit.TargetFacing = formation.FacingDirection;
 
-            closestUnit.NewMovementStarted(EUnitMovementMode.Formation);
+            closestUnit.NewMovementStarted(movementMode);
+
             if (formation.IsShootingPosition(unitIndex))
             {
                 closestUnit.InShootingPosition = true;
@@ -324,12 +322,12 @@ public class UnitGroupController : MonoBehaviour
         Units.Remove(unit);
     }
 
-    public void Reform()
+    public void Reform(bool useRelevantMovementMode)
     {
         Globals.GetStats.RegisterEvent("GroupTryReform", 1);
 
         Formation.Reform(this, Globals.GetFormationGroupController.GetUnitsMargin());
-        SetFormation(Formation);
+        SetFormation(Formation, useRelevantMovementMode);
         ReformNeeded = false;
 
         LastReformTime = System.DateTime.Now;

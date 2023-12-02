@@ -142,19 +142,17 @@ public class UserControlsController : MonoBehaviour
     }
 
     #region Action icons
-    public void Toggle_FiringMode()
+    public void ToggleUnitAction(string toggleName)
     {
-        if (UnitsSelected.Count() == 1)
+        foreach(UnitGroupController unit in UnitsSelected)
         {
-            if (UnitsSelected.First().FiringMode != EUnitFiringMode.Salvo)
+            UnitAction relevantAction = unit.UnitActions.Find(x => toggleName.Contains(x.ActionName));
+            string relevantState = relevantAction.ActionStates.Find(x => toggleName.EndsWith(x));
+
+            if (!string.IsNullOrEmpty(relevantState))
             {
-                UnitsSelected.First().FiringMode = EUnitFiringMode.Salvo;
+                relevantAction.ChangeState(relevantState);
             }
-            else
-            {
-                UnitsSelected.First().FiringMode = EUnitFiringMode.AtWill;
-            }
-            Globals.GetInterface.RefreshUnitActions(UnitsSelected.First());
         }
     }
     #endregion

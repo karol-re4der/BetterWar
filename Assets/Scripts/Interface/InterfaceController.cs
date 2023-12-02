@@ -1,16 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using System.Linq;
 
 public class InterfaceController : MonoBehaviour
 {
     public Transform unitSpace;
     public GameObject UnitsPanel;
+    public GameObject ActionsPanel;
     public GameObject UnitIconPrefab;
-
-    public BetterToggle Toggle_MovementType;
-    public BetterToggle Toggle_FiringType;
 
     // Start is called before the first frame update
     void Start()
@@ -24,6 +23,7 @@ public class InterfaceController : MonoBehaviour
         
     }
 
+    #region Unit Icons
     public List<UnitIconController> GetAllUnitIcons()
     {
         return GetComponentsInChildren<UnitIconController>().ToList();
@@ -46,32 +46,6 @@ public class InterfaceController : MonoBehaviour
         }
     }
 
-    public void RefreshUnitActions(UnitGroupController unitSelected)
-    {
-        if (unitSelected)
-        {
-            Toggle_FiringType.gameObject.SetActive(true);
-            if (unitSelected.FiringMode == EUnitFiringMode.Salvo)
-            {
-                Toggle_FiringType.Enable();
-            }
-            else
-            {
-                Toggle_FiringType.Disable();
-            }
-        }
-        else
-        {
-            Toggle_FiringType.gameObject.SetActive(false);
-        }
-    }
-
-    public void CreateUnitIcon(UnitGroupController unitGroup)
-    {
-        GameObject newIcon = Instantiate(UnitIconPrefab, UnitsPanel.transform);
-        newIcon.GetComponent<UnitIconController>().UnitGroup = unitGroup;
-    }
-
     public UnitIconController GetUnitIcon(UnitController unit)
     {
         return GetUnitIcon(unit.OwnerGroup);
@@ -79,7 +53,7 @@ public class InterfaceController : MonoBehaviour
 
     public UnitIconController GetUnitIcon(UnitGroupController unitGroup)
     {
-        foreach(Transform icon in UnitsPanel.transform)
+        foreach (Transform icon in UnitsPanel.transform)
         {
             if (icon.gameObject.GetComponent<UnitIconController>().UnitGroup == unitGroup)
             {
@@ -87,6 +61,13 @@ public class InterfaceController : MonoBehaviour
             }
         }
         return null;
+    }
+
+
+    public void CreateUnitIcon(UnitGroupController unitGroup)
+    {
+        GameObject newIcon = Instantiate(UnitIconPrefab, UnitsPanel.transform);
+        newIcon.GetComponent<UnitIconController>().UnitGroup = unitGroup;
     }
 
     public void RefreshSelectionIcons(List<UnitGroupController> UnitsSelected)
@@ -102,7 +83,7 @@ public class InterfaceController : MonoBehaviour
                 unitIcon.SetSelected(false);
             }
         }
-        if(UnitsSelected.Count()>0)
+        if (UnitsSelected.Count() > 0)
         {
             RefreshUnitActions(UnitsSelected.First());
         }
@@ -111,4 +92,47 @@ public class InterfaceController : MonoBehaviour
             RefreshUnitActions(null);
         }
     }
+
+    #endregion
+
+    #region Unit actions
+    public void RefreshUnitActions(UnitGroupController unitSelected)
+    {
+        if (unitSelected)
+        {
+            foreach (UnitAction action in unitSelected.UnitActions)
+            {
+                foreach (Transform actionIcon in ActionsPanel.transform)
+                {
+                    if (actionIcon.gameObject.name.Contains(action.ActionName))
+                    {
+                        if (actionIcon.gameObject.name.EndsWith(action.GetCurrentState()))
+                        {
+                            actionIcon.gameObject.GetComponent<BetterToggle>().Enable();
+                        }
+                        else
+                        {
+                            actionIcon.gameObject.GetComponent<BetterToggle>().Disable();
+                        }
+                        actionIcon.gameObject.SetActive(true);
+                    }
+                }
+            }
+        }
+        else
+        {
+            foreach(Transform actionIcon in ActionsPanel.transform)
+            {
+                actionIcon.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    public void ToggleUnitAction(Button button)
+    {
+        Globals.GetUserControls.ToggleUnitAction(button.gameObject.name);
+        RefreshUnitActions(Globals.GetUserControls.UnitsSelected.First());
+    }
+    #endregion
+
 }
