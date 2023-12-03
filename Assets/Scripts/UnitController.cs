@@ -187,13 +187,13 @@ public class UnitController : MonoBehaviour
         {
             if (OwnerGroup.Formation.IsShootingPosition(PositionInFormation))
             {
-                if (OwnerGroup.EnemyTarget != null)
+                if (OwnerGroup.EnemiesInRange != null)
                 {
                     if (ReadyToShoot)
                     {
                         if (AimedAt == null)
                         {
-                            TakeAim(OwnerGroup.EnemyTarget);
+                            TakeAim(getTargets());
                         }
                         else
                         {
@@ -203,14 +203,14 @@ public class UnitController : MonoBehaviour
                                 TargetInRange = TargetUnitInRange(AimedAt);
                                 if (!TargetInRange)
                                 {
-                                    TakeAim(OwnerGroup.EnemyTarget);
+                                    TakeAim(getTargets());
                                 }
                                 else
                                 {
                                     TargetInSight = TargetUnitInSight(AimedAt);
                                     if (!TargetInSight)
                                     {
-                                        TakeAim(OwnerGroup.EnemyTarget);
+                                        TakeAim(getTargets());
                                     }
                                     else if (OwnerGroup.IsFireAllowed())
                                     {
@@ -220,7 +220,7 @@ public class UnitController : MonoBehaviour
                             }
                             else
                             {
-                                TakeAim(OwnerGroup.EnemyTarget);
+                                TakeAim(getTargets());
                             }
                         }
                     }
@@ -342,13 +342,25 @@ public class UnitController : MonoBehaviour
 
     }
 
-    private void TakeAim(UnitGroupController targetGroup)
+    private List<UnitGroupController> getTargets()
+    {
+        if (OwnerGroup.TargetEnemyOverride!=null)
+        {
+            List < UnitGroupController > targets = new List<UnitGroupController>();
+            targets.Add(OwnerGroup.TargetEnemyOverride);
+            return targets;
+        }
+
+        return OwnerGroup.EnemiesInRange;
+    }
+
+    private void TakeAim(List<UnitGroupController> potentialTargets)
     {
         Globals.GetStats.RegisterEvent("UnitTakeAim", 1);
 
         List<UnitController> targetUnits = new List<UnitController>();
-        //targetUnits = targetGroup.Units.OrderBy(x => Vector3.Distance(x.transform.position, transform.position)).Where(x => Vector3.Distance(x.transform.position, transform.position)<OwnerGroup.SightRange).ToList(); //this query it ugly please fix later
-        targetUnits = targetGroup.Units.Where(x => TargetUnitAngled(x) && TargetUnitInRange(x) && TargetUnitInSight(x)).OrderBy(x => Vector3.Distance(GetModelShootingPoint(), x.GetModelCenterPoint())).ToList();
+        potentialTargets.ForEach(x => targetUnits.AddRange(x.Units));
+        targetUnits = targetUnits.Where(x => TargetUnitAngled(x) && TargetUnitInRange(x) && TargetUnitInSight(x)).OrderBy(x => Vector3.Distance(GetModelShootingPoint(), x.GetModelCenterPoint())).ToList();
         //If enemy is bunched up, aim at front
         if (targetUnits.Count() > 10)
         {
@@ -389,7 +401,7 @@ public class UnitController : MonoBehaviour
         //Shoot ray
         bool somethingHit = false;
         float timeToHit = 0f;
-        if (Physics.Raycast(GetModelShootingPoint(), dir, out hit, OwnerGroup.SightRange, LayerMask.GetMask("Units"), QueryTriggerInteraction.UseGlobal))
+        if (Physics.Raycast(GetModelShootingPoint(), dir, out hit, OwnerGroup.ProjectileEffectiveRange, LayerMask.GetMask("Units"), QueryTriggerInteraction.UseGlobal))
         {
             if (hit.collider != null)
             {
@@ -402,11 +414,11 @@ public class UnitController : MonoBehaviour
         if (somethingHit)
         {
             if (hit.collider.transform.parent.gameObject.GetComponent<UnitController>().OwnerGroup.OwnerPlayer != OwnerGroup.OwnerPlayer){
-                AlliesHit++;
+                EnemiesHit++;
             }
             else
             {
-                EnemiesHit++;
+                AlliesHit++;
             }
 
             Globals.GetProjectileSystem.NewProjectileAtPoint(GetModelShootingPoint(), hit.point, true);

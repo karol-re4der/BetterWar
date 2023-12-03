@@ -79,7 +79,18 @@ public class UserControlsController : MonoBehaviour
                 {
                     if (UnitsSelected.Count() > 0)
                     {
-                        if ((DateTime.Now - _mouseDownTime).TotalMilliseconds < 200)
+                        #region targeting
+                        if (unitClicked != null && (DateTime.Now - _mouseDownTime).TotalMilliseconds < 200)
+                        {
+                            if (unitClicked.OwnerGroup.OwnerPlayer != Globals.GetActivePlayer)
+                            {
+                                OverrideTarget(unitClicked);
+                            }
+                        }
+                        #endregion
+
+                        #region selection
+                        else if ((DateTime.Now - _mouseDownTime).TotalMilliseconds < 200)
                         {
                             Globals.GetFormationGroupController.ShiftFormations(clickPos, UnitsSelected);
                         }
@@ -88,6 +99,7 @@ public class UserControlsController : MonoBehaviour
                             Globals.GetFormationGroupController.SendToUnits(UnitsSelected);
                             Globals.GetFormationGroupController.Hide();
                         }
+                        #endregion
                     }
                 }
                 #endregion
@@ -140,6 +152,17 @@ public class UserControlsController : MonoBehaviour
             PlayerController.SwitchPlayer(PlayerController.GetPlayers().Find(x => x.PlayerName.Equals("Default AI")));
         }
     }
+
+    #region Targeting
+    public void OverrideTarget(UnitController unit)
+    {
+        foreach(UnitGroupController group in UnitsSelected)
+        {
+            group.TargetEnemyOverride = unit.OwnerGroup;
+            group.ClearUnitTargets();
+        }
+    }
+    #endregion
 
     #region Action icons
     public void ToggleUnitAction(string toggleName)

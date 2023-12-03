@@ -18,21 +18,31 @@ public enum EUnitFormationType
 
 public class UnitGroupController : MonoBehaviour
 {
-    public float SightRange;
-    public Vector3 WeightCenter;
     public PlayerController OwnerPlayer;
     public List<UnitController> Units = new List<UnitController>();
     public GameObject UnitPrefab;
 
     [Header("Runtime")]
+    public Vector3 WeightCenter;
+    public float FormationSpan; //Distance from weight center to the furthest unit
     public bool ReformNeeded = false;
     public int CurrentSize = 0;
     public int CurrentReloaded = 0;
     public float CurrentReloadProgress = 0;
     public int CurrentInShootingPosition = 0;
-    public UnitGroupController EnemyTarget;
+    public List<UnitGroupController> EnemiesInRange;
+    public UnitGroupController TargetEnemyOverride;
+
+    [Header("Timestamps")]
     public System.DateTime SalvoIssueTime = System.DateTime.MinValue;
     public System.DateTime LastReformTime = System.DateTime.MinValue;
+    public System.DateTime LastCountersCheckTime = System.DateTime.MinValue;
+    public System.DateTime LastLookForTargetsTime = System.DateTime.MinValue;
+    public float ReformCheckFrequency = 4f;
+    public float CountersCheckFrequency = 1f;
+    public float LookForTargetsFrequency = 1f;
+
+
     public bool IsSelected = false;
     public List<UnitAction> UnitActions = new List<UnitAction>();
 
@@ -40,7 +50,8 @@ public class UnitGroupController : MonoBehaviour
     public int InitialSize = 100;
 
     [Header("Settings")]
-    public float ReformCheckFrequency = 3f;
+    public float SightRange = 100f;
+    public float ProjectileEffectiveRange = 200f;
     public float SalvoShootersRequired = 0.8f; //in percentage of possible shooters
     public float SalvoShootingWindow = 1f; //in seconds
 
@@ -55,7 +66,7 @@ public class UnitGroupController : MonoBehaviour
 
         OwnerPlayer = owner;
 
-        CreateUnit(transform.position, 0, EWeaponType.Flag);
+        createUnit(transform.position, 0, EWeaponType.Flag);
         for (int i = 1; i < CurrentSize; i++)
         {
             if (FormationType == EUnitFormationType.Heap)
@@ -65,7 +76,7 @@ public class UnitGroupController : MonoBehaviour
                 pos.x += Random.Range(0, formationSize) - formationSize / 2;
                 pos.z += Random.Range(0, formationSize) - formationSize / 2;
 
-                CreateUnit(pos, i, (Random.Range(0, 20) == 5)?EWeaponType.Flag:EWeaponType.Ranged);
+                createUnit(pos, i, (Random.Range(0, 20) == 5)?EWeaponType.Flag:EWeaponType.Ranged);
             }
             else
             {
@@ -86,13 +97,29 @@ public class UnitGroupController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        UpdateSizeCounter();
-        UpdateReloadedCounter();
-        UpdateWeigthCenter();
-
-        if (EnemyTarget == null || !EnemyInRange(EnemyTarget))
+        if ((System.DateTime.Now - LastCountersCheckTime).TotalMilliseconds > CountersCheckFrequency * 1000f)
         {
-            EnemyTarget = FindClosestEnemy();
+            UpdateSizeCounter();
+            UpdateReloadedCounter();
+            updateWeightCenter();
+            updateFormationSpan();
+
+            LastCountersCheckTime = System.DateTime.Now;
+        }
+
+        if ((System.DateTime.Now - LastLookForTargetsTime).TotalMilliseconds > LookForTargetsFrequency * 1000f)
+        {
+            EnemiesInRange = findEnemiesInRange();
+
+            if (TargetEnemyOverride != null)
+            {
+                if (!enemyInRange(TargetEnemyOverride))
+                {
+                    TargetEnemyOverride = null;
+                }
+            }
+
+            LastLookForTargetsTime = System.DateTime.Now;
         }
 
         if(ReformNeeded && (System.DateTime.Now-LastReformTime).TotalMilliseconds > ReformCheckFrequency*1000f)
@@ -103,9 +130,9 @@ public class UnitGroupController : MonoBehaviour
         }
     }
 
-    private GameObject CreateUnit(Vector3 position, int index, EWeaponType weaponType)
+    private GameObject createUnit(Vector3 position, int index, EWeaponType weaponType)
     {
-        GameObject newUnit = Instantiate(UnitPrefab, position, Quaternion.identity, Globals.GetUnitSpace);
+        GameObject newUnit = Instantiate(UnitPrefab, position, Quaternion.identity, transform);
         newUnit.GetComponent<UnitController>().Initialize(this, index, weaponType);
         Units.Add(newUnit.GetComponent<UnitController>());
         return newUnit;
@@ -313,35 +340,11 @@ public class UnitGroupController : MonoBehaviour
         //}
     }
 
-    private List<UnitGroupController> FindEnemiesInSight()
-    {
-        List<UnitGroupController> enemyGroupsInRange = new List<UnitGroupController>();
-
-        foreach (PlayerController player in PlayerController.GetPlayers())
-        {
-            if (player != OwnerPlayer)
-            {
-                foreach (UnitGroupController group in player.UnitGroups)
-                {
-                    float groupDistance = Vector3.Distance(WeightCenter, group.WeightCenter);
-                    if (groupDistance < SightRange)
-                    {
-                        enemyGroupsInRange.Add(group);
-                    }
-                }
-            }
-        }
-
-        return enemyGroupsInRange;
-    }
-
-    private UnitGroupController FindClosestEnemy()
+    private List<UnitGroupController> findEnemiesInRange()
     {
         Globals.GetStats.RegisterEvent("GroupLookForTarget", 1);
 
-
-        UnitGroupController closestEnemy = null;
-        float shortestDistance = float.MaxValue;
+        List<UnitGroupController> targets = new List<UnitGroupController>();
 
         foreach (PlayerController player in PlayerController.GetPlayers())
         {
@@ -349,50 +352,54 @@ public class UnitGroupController : MonoBehaviour
             {
                 foreach (UnitGroupController group in player.UnitGroups)
                 {
-                    float groupDistance = Vector3.Distance(WeightCenter, group.WeightCenter);
-                    if (groupDistance < shortestDistance)
+                    if (enemyInRange(group))
                     {
-                        closestEnemy = group;
-                        shortestDistance = groupDistance;
+                        targets.Add(group);
                     }
                 }
             }
         }
 
-        if (shortestDistance < SightRange)
-        {
-            return closestEnemy;
-        }
-        return null;
+        return targets;
     }
 
-    private bool EnemyInRange(UnitGroupController enemyGroup)
+    private bool enemyInRange(UnitGroupController enemyGroup)
     {
         float distance = Vector3.Distance(enemyGroup.WeightCenter, WeightCenter);
-        return distance < SightRange;
+        return distance-enemyGroup.FormationSpan < SightRange;
     }
 
-    private void UpdateWeigthCenter()
+    private void updateWeightCenter()
     {
         WeightCenter = Vector3.zero;
-        //if (Units.Count < 10)
-        //{
-            for (int i = 0; i < Units.Count(); i++)
-            {
-                WeightCenter += Units[i].transform.position;
-            }
-            WeightCenter /= Units.Count();
-        //}
-        //else
-        //{
-        //    int i = 0;
-        //    for (i = 0; i < Units.Count()/2; i++)
-        //    {
-        //        WeightCenter += Units[i].transform.position;
-        //    }
-        //    WeightCenter /= i;
-        //}
+        for (int i = 0; i < Units.Count(); i++)
+        {
+            WeightCenter += Units[i].transform.position;
+        }
+        WeightCenter /= Units.Count();
+    }
 
+    private void updateFormationSpan()
+    {
+        FormationSpan = 0f;
+        float dist = 0f;
+        foreach(UnitController unit in Units)
+        {
+            dist = Vector3.Distance(unit.transform.position, WeightCenter);
+
+            if (dist > FormationSpan)
+            {
+                FormationSpan = dist;
+            }
+        }
+    }
+
+    public void ClearUnitTargets()
+    {
+        foreach(UnitController unit in Units)
+        {
+            unit.AimedAt = null;
+        }
     }
 
     public void RemoveUnit(UnitController unit)
