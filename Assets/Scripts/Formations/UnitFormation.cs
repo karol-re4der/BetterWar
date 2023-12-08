@@ -24,9 +24,8 @@ public class UnitFormation:MonoBehaviour
     public Vector3 RightAnchor;
     public Vector3 FacingDirection;
 
-    public bool Attached = false;
-
     public List<Vector3> Positions = new List<Vector3>();
+    public UnitController[,] UnitsAttached;
     public List<GameObject> _markersInUse = new List<GameObject>();
 
     public bool ShowDebugMarkers = false;
@@ -57,6 +56,21 @@ public class UnitFormation:MonoBehaviour
         leftAnchorMarker.SetActive(IsHidden() ? false : ShowDebugMarkers);
         rightAnchorMarker.SetActive(IsHidden() ? false : ShowDebugMarkers);
         pivotMarker.SetActive(IsHidden() ? false : ShowDebugMarkers);
+    }
+
+    public bool IsAttached()
+    {
+        return UnitsAttached != null;
+    }
+
+    public void Detach()
+    {
+        UnitsAttached = null;
+    }
+
+    public void Attach()
+    {
+        UnitsAttached = new UnitController[Columns, Rows];
     }
 
     public float GetMaxFrontage(float spacing)
@@ -174,22 +188,17 @@ public class UnitFormation:MonoBehaviour
         }
     }
 
-    public bool IsShootingPosition(Vector2 posInFormation)
-    {
-        if(posInFormation.x==0 || posInFormation.x == Columns - 1)
-        {
-            return true;
-        }
-        else if(posInFormation.y == 0)
-        {
-            return true;
-        }
-        return false;
-    }
-
     public bool IsValid()
     {
         return Columns > MinColumns && Rows > MinRows;
+    }
+
+    public void AlignUnitsInArray(List<UnitController> units)
+    {
+        foreach(UnitController unit in units)
+        {
+            UnitsAttached[(int)unit.PositionInFormation.x, (int)unit.PositionInFormation.y] = unit;
+        }
     }
 
     public Vector3 PositionInFormationToWorldSpace(Vector2 pos)
@@ -203,7 +212,11 @@ public class UnitFormation:MonoBehaviour
             i -= (int)Mathf.Floor(Blanks / 2f);
         }
 
-        return Positions.ElementAt(i);
+        if (i < Positions.Count())
+        {
+            return Positions.ElementAt(i);
+        }
+        return Vector3.zero;
     }
 
     public Vector2 WorldSpaceToPositionInFormation(Vector3 pos)

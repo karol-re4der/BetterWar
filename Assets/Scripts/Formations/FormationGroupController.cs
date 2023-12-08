@@ -193,7 +193,7 @@ public class FormationGroupController : MonoBehaviour
 
     private UnitFormation getPooledFormation()
     {
-        UnitFormation formation = _formationsPool.Find(x => !x.Attached);
+        UnitFormation formation = _formationsPool.Find(x => !x.IsAttached());
         _formationsPool.Remove(formation);
         return formation;
     }

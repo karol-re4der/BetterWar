@@ -41,7 +41,7 @@ public class UserControlsController : MonoBehaviour
                 {
                     if (debugToggle1.isActive)
                     {
-                        PlayerController.GetActivePlayer().SpawnUnit(clickPos);
+                        PlayerController.GetActivePlayer().SpawnUnit(clickPos, EUnitType.Melee);
                     }
                     else if (unitClicked!=null)
                     {

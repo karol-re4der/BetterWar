@@ -2651,6 +2651,7 @@ MonoBehaviour:
   GroupLookForTargetPerSecond: 0
   UnitTakeAimPerSecond: 0
   UnitShootPerSecond: 0
+  UnitTryEngagePerSecond: 0
   MarkersInPool: 0
   ProjectilesInPool: 0
   SmokesInPool: 0

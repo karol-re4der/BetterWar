@@ -24,11 +24,11 @@ public class PlayerController : MonoBehaviour
         
     }
 
-    public GameObject SpawnUnit(Vector3 position)
+    public GameObject SpawnUnit(Vector3 position, EUnitType type)
     {
-        GameObject newUnit = Instantiate(UnitGroupPrefab, position, Quaternion.identity, Globals.GetUnitSpace);
-        newUnit.GetComponent<UnitGroupController>().CurrentSize = 100;//Random.Range(1, newUnit.GetComponent<UnitGroupController>().InitialSize);
-        newUnit.GetComponent<UnitGroupController>().Initialize(this);
+        GameObject newUnit = Instantiate(UnitGroupPrefab, Vector3.zero, Quaternion.identity, Globals.GetUnitSpace);
+        newUnit.GetComponent<UnitGroupController>().CurrentSize = 200;//PlayerName == "Default Player" ? 1: 2;//Random.Range(1, newUnit.GetComponent<UnitGroupController>().InitialSize);
+        newUnit.GetComponent<UnitGroupController>().Initialize(this, type, position);
         UnitFormation newFormation = Globals.GetFormationGroupController.GetFormationToUse();
         float marginSize = Globals.GetFormationGroupController.GetUnitsMargin();
         newFormation.Reform(position - Vector3.left * marginSize*4, position + Vector3.left * marginSize * 4, newUnit.GetComponent<UnitGroupController>(), marginSize);
